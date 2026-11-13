@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="ko" data-file="AI_lecture_part3"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="교사 연수 3부: 손동작으로 연주하는 웹사이트를 바이브코딩으로 만들어 보기.">
+<title>코드는 AI가, 확인은 내가 (교사 연수 3부)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&amp;family=Gowun+Dodum&amp;display=swap">
+<style>
+  :root {
+    --bg: #FFFFFF; --ink: #10201A; --sub: #55635A; --faint: #9AA69E; --line: #E3E9E0; --paper: #F4F6F1;
+    --accent: #1F7A4C; --accent-ink: #14583A; --accent-soft: #E6F4EA; --mark: #D2F28B; --warm: #FF5A36; --dark: #10201A;
+    --font: "NanumSquareRound", "Gowun Dodum", "Pretendard Variable", Pretendard, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    --title: "NanumSquareRound", "Jua", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: min(1vw, 1.7778vh); }
+  body { margin: 0; height: 100vh; overflow: hidden; display: grid; place-items: center; background: var(--bg); color: var(--ink); font-family: var(--font); word-break: keep-all; overflow-wrap: break-word; -webkit-font-smoothing: antialiased; }
+  button { font-family: inherit; color: inherit; }
+  :focus-visible { outline: .22rem solid var(--accent); outline-offset: .2rem; }
+  em { font-style: normal; font-weight: 800; color: var(--accent); }
+  h1, h2, h3, .bignum, .tile b, .tile .tn, .case-t, .take, .band, .slogan, .kc h3, .c3 h3 { font-family: var(--title); }
+  .mk { background-image: linear-gradient(var(--mark), var(--mark)); background-repeat: no-repeat; background-position: 0 80%; background-size: 100% 75%; padding: 0 .1em; }
+
+  .stage { position: relative; width: 100rem; height: 56.25rem; overflow: hidden; background: var(--bg); }
+
+  /* 위 막대 */
+  .top { position: absolute; left: 0; right: 0; top: 0; height: 4.2rem; display: flex; align-items: center; gap: 2rem; padding: 0 3rem; border-bottom: .1rem solid var(--line); z-index: 5; background: rgba(255,255,255,.92); }
+  .brand { display: flex; align-items: baseline; gap: .7rem; white-space: nowrap; cursor: pointer; background: none; border: 0; padding: 0; }
+  .brand b { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; }
+  .brand b i { font-style: normal; color: var(--accent); }
+  .brand span { font-size: 1.05rem; color: var(--sub); letter-spacing: .08em; }
+  .nums { display: flex; gap: .2rem; margin: 0 auto; }
+  .nums button { border: 0; background: none; font-size: 1.1rem; font-weight: 600; color: var(--faint); padding: .3rem .45rem; cursor: pointer; border-bottom: .2rem solid transparent; font-variant-numeric: tabular-nums; }
+  .nums button.cur { color: var(--ink); border-bottom-color: var(--accent); }
+  .nums button:hover { color: var(--ink); }
+  .tools { display: flex; gap: .4rem; align-items: center; }
+  .tools button { border: .1rem solid var(--line); background: #fff; border-radius: 99px; font-size: 1.1rem; padding: .3rem 1rem; cursor: pointer; }
+  .tools button:hover { border-color: var(--ink); }
+
+  /* 목차(index)로 돌아가기: 위 막대 도구 줄의 맨 앞 */
+  .tools a.homeBtn { border: .1rem solid var(--line); background: #fff; border-radius: 99px; font-size: 1.1rem; padding: .3rem 1rem; color: inherit; text-decoration: none; line-height: normal; white-space: nowrap; }
+  .tools a.homeBtn:hover { border-color: var(--ink); }
+
+  /* 아래 막대 */
+  .bot { position: absolute; left: 0; right: 0; bottom: 0; height: 3.4rem; display: flex; align-items: center; gap: 1.2rem; padding: 0 3rem; border-top: .1rem solid var(--line); z-index: 5; background: #fff; font-size: 1.15rem; color: var(--sub); }
+  .bot .pg b { color: var(--ink); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+  .bot .ttl { color: var(--ink); font-weight: 600; }
+  .bot .hint { margin-left: auto; }
+  .bot .arw { display: flex; gap: .4rem; }
+  .bot .arw button { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: .1rem solid var(--line); background: #fff; cursor: pointer; font-size: 1.1rem; }
+  .bot .arw button:hover { border-color: var(--ink); }
+  .bar { position: absolute; left: 0; bottom: 3.4rem; height: .2rem; background: var(--accent); width: 0; transition: width .5s; z-index: 6; }
+
+  /* 슬라이드 */
+  .slide { position: absolute; left: 0; right: 0; top: 4.2rem; bottom: 3.4rem; padding: 2.2rem 4rem 2rem; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transform: translateX(2.5rem); transition: opacity .5s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .slide.left { transform: translateX(-2.5rem); }
+  .slide.on { opacity: 1; pointer-events: auto; transform: none; }
+  .a { opacity: 0; transform: translateY(1.4rem); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: calc(var(--i, 0) * 110ms + 120ms); }
+  .slide.on .a { opacity: 1; transform: none; }
+  .rv { opacity: 0; transform: translateY(1rem); transition: opacity .5s, transform .5s; pointer-events: none; }
+  .rv.in { opacity: 1; transform: none; pointer-events: auto; }
+
+  .eyebrow { font-size: 1.05rem; font-weight: 700; letter-spacing: .14em; color: var(--accent); }
+  .eyebrow span { letter-spacing: 0; color: var(--sub); font-weight: 600; margin-left: .8rem; }
+  .slide h2 { margin: .6rem 0 0; font-size: 3.6rem; font-weight: 800; line-height: 1.18; letter-spacing: -.035em; }
+  .lead { margin: .8rem 0 0; font-size: 1.6rem; color: var(--sub); line-height: 1.5; }
+  .body { flex: 1; min-height: 0; margin-top: 1.8rem; position: relative; }
+
+  /* 표지 */
+  .cover { flex-direction: row; align-items: center; gap: 3rem; padding: 2rem 4rem; }
+  .cv-l { flex: 1; }
+  .cover h1 { margin: 1rem 0 0; font-size: 7.4rem; font-weight: 800; line-height: 1.04; letter-spacing: -.05em; }
+  .cv-sub { margin: 2rem 0 0; font-size: 1.9rem; line-height: 1.55; color: var(--ink); }
+  .cv-sub span { color: var(--sub); }
+  .cv-meta { margin-top: 1.4rem; font-size: 1.4rem; color: var(--sub); }
+  .cta { margin-top: 2.2rem; display: inline-flex; align-items: center; gap: .6rem; font-size: 1.5rem; font-weight: 700; padding: .9rem 1.8rem; border-radius: 99px; border: 0; background: var(--ink); color: #fff; cursor: pointer; }
+  .cta:hover { background: var(--accent); }
+  .cv-r { width: 42rem; }
+  .pbox { background: var(--paper); border-radius: 2rem; padding: 2rem 2.2rem 1.8rem; min-height: 28rem; box-shadow: 0 2rem 4rem -2.5rem rgba(16,32,26,.35); }
+  .pb-h { display: flex; align-items: center; gap: .7rem; font-size: 1.15rem; font-weight: 700; color: var(--sub); letter-spacing: .06em; margin-bottom: 1.2rem; }
+  .pb-h .dot { width: .8rem; height: .8rem; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 .35rem var(--accent-soft); }
+  .pb-t { font-size: 2rem; font-weight: 600; line-height: 1.65; min-height: 16rem; }
+  .pb-t .seg { background-image: linear-gradient(var(--mark), var(--mark)); background-repeat: no-repeat; background-position: 0 82%; background-size: 0% 70%; transition: background-size .7s ease; }
+  .pb-t .seg.lit { background-size: 100% 70%; }
+  .caret { display: inline-block; width: .15rem; height: 1.9rem; background: var(--accent); vertical-align: -.25rem; margin-left: .1rem; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .pb-legend { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.2rem; min-height: 2.4rem; }
+  .chip { font-size: 1.15rem; font-weight: 700; padding: .3rem .9rem; border-radius: 99px; background: var(--ink); color: #fff; }
+  .chip.soft { background: var(--accent-soft); color: var(--accent-ink); }
+  .pb-legend .chip { animation: pop .4s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes pop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+  .pb-cap { margin: 1rem 0 0 .4rem; font-size: 1.15rem; color: var(--sub); }
+
+  /* 같은 요청 */
+  .ab { display: grid; grid-template-columns: 1fr 1.35fr; gap: 2rem; }
+  .abc { border-radius: 1.8rem; padding: 1.8rem 2rem; }
+  .abc.a1 { background: var(--paper); } .abc.b1 { background: #fff; border: .15rem solid var(--ink); }
+  .abc .k { display: flex; align-items: center; gap: .8rem; font-size: 1.25rem; font-weight: 700; color: var(--sub); }
+  .abc .k b { width: 2.6rem; height: 2.6rem; border-radius: .8rem; display: grid; place-items: center; background: var(--ink); color: #fff; font-size: 1.4rem; }
+  .abc p { margin: 1.2rem 0 0; font-size: 2.1rem; font-weight: 600; line-height: 2.1; }
+  .hseg { position: relative; background-image: linear-gradient(var(--mark), var(--mark)); background-repeat: no-repeat; background-position: 0 85%; background-size: 0% 60%; transition: background-size .7s ease var(--d, 0s); }
+  .hseg::before { content: attr(data-k); position: absolute; left: 0; top: -1.15rem; font-size: 1.05rem; font-weight: 800; color: var(--accent); white-space: nowrap; opacity: 0; transition: opacity .4s ease var(--d, 0s); line-height: 1; }
+  .lit .hseg { background-size: 100% 60%; } .lit .hseg::before { opacity: 1; }
+  .band { margin-top: 2rem; background: var(--dark); color: #fff; border-radius: 1.6rem; padding: 1.5rem 2rem; font-size: 2.1rem; font-weight: 700; line-height: 1.5; }
+  .band em { color: var(--mark); }
+
+  /* 첫 출근 */
+  .know { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .kc { border-radius: 1.8rem; padding: 1.6rem 2rem; }
+  .kc.k1 { background: var(--paper); } .kc.k2 { background: #fff; border: .15rem solid var(--accent); }
+  .kc h3 { margin: 0 0 1rem; font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; }
+  .kc ul { margin: 0; padding: 0; list-style: none; }
+  .kc li { font-size: 1.75rem; font-weight: 600; padding: .65rem 0; border-top: .1rem solid var(--line); display: flex; align-items: center; gap: .9rem; }
+  .kc li:first-child { border-top: 0; }
+  .kc li i { font-style: normal; font-size: 1.1rem; font-weight: 800; color: var(--faint); width: 2rem; }
+  .kc.k2 li span { background-image: linear-gradient(var(--mark), var(--mark)); background-repeat: no-repeat; background-position: 0 85%; background-size: 0% 60%; transition: background-size .6s ease var(--d, 0s); }
+  .kc.k2.lit li span { background-size: 100% 60%; }
+
+  /* 지도 */
+  .map { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+  .ph { display: flex; flex-direction: column; gap: .9rem; }
+  .ph-h { font-size: 1.05rem; font-weight: 800; letter-spacing: .14em; color: var(--accent); } .ph-h span { color: var(--ink); letter-spacing: 0; font-size: 1.45rem; margin-left: .6rem; }
+  .tile { text-align: left; border: .1rem solid var(--line); background: #fff; border-radius: 1.4rem; padding: 1.1rem 1.4rem; cursor: pointer; display: grid; grid-template-columns: 4.4rem 1fr; align-items: center; transition: transform .25s, border-color .25s, box-shadow .25s; }
+  .tile:hover { transform: translateY(-.3rem); border-color: var(--ink); box-shadow: 0 1rem 2rem -1.4rem rgba(16,32,26,.5); }
+  .tile .tn { font-size: 2.6rem; font-weight: 800; letter-spacing: -.04em; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .tile b { display: block; font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; }
+  .tile small { display: block; margin-top: .2rem; font-size: 1.15rem; color: var(--sub); }
+  .tile.wide { margin-top: 1.4rem; width: 100%; grid-template-columns: 4.4rem 1fr auto; column-gap: 1.4rem; background: var(--paper); border-color: var(--paper); }
+  .tile.wide .ph-h { align-self: center; }
+
+  /* 기법 슬라이드 */
+  .tech .grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 33rem 1fr; grid-template-rows: 1fr auto; column-gap: 3rem; row-gap: 1.4rem; }
+  .t-left { display: flex; flex-direction: column; }
+  .bignum { font-size: 10rem; font-weight: 800; line-height: .9; letter-spacing: -.06em; color: transparent; -webkit-text-stroke: .16rem var(--ink); margin-top: .8rem; font-variant-numeric: tabular-nums; }
+  .tech h2 { font-size: 3.5rem; margin-top: 1.2rem; }
+  .pe { margin-top: 1.2rem; align-self: flex-start; display: inline-flex; align-items: center; gap: .6rem; font-size: 1.15rem; color: var(--sub); border: .1rem solid var(--line); border-radius: 99px; padding: .35rem 1rem; }
+  .pe b { color: var(--ink); font-weight: 800; } .pe i { font-style: normal; color: var(--accent); font-weight: 700; }
+  .desc { margin: 1.2rem 0 0; font-size: 1.55rem; line-height: 1.6; color: var(--ink); }
+  .t-right { display: flex; flex-direction: column; gap: 1.4rem; min-height: 0; }
+  .pcard { background: var(--paper); border-radius: 1.8rem; padding: 1.6rem 2rem 1.7rem; }
+  .pc-h { display: flex; align-items: center; gap: 1rem; font-size: 1.15rem; font-weight: 800; color: var(--sub); letter-spacing: .08em; }
+  .tg { margin-left: auto; display: inline-flex; background: #fff; border-radius: 99px; padding: .25rem; border: .1rem solid var(--line); }
+  .tg button { border: 0; background: transparent; font-size: 1.15rem; font-weight: 700; padding: .35rem 1rem; border-radius: 99px; cursor: pointer; color: var(--sub); letter-spacing: 0; }
+  .tg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .pc-t { margin: 1.1rem 0 0; font-size: 2.05rem; font-weight: 600; line-height: 1.7; }
+  .pc-t .add { display: none; background-image: linear-gradient(var(--mark), var(--mark)); background-repeat: no-repeat; background-position: 0 82%; background-size: 0% 70%; transition: background-size .7s ease var(--d, 0s); }
+  .pcard.after .pc-t .add { display: inline; }
+  .pcard.after.lit .pc-t .add { background-size: 100% 70%; }
+  .legend { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.1rem; min-height: 2.3rem; }
+  .legend .chip { opacity: 0; transform: scale(.8); transition: opacity .35s ease var(--d, 0s), transform .35s ease var(--d, 0s); }
+  .pcard.after.lit .legend .chip { opacity: 1; transform: none; }
+  .pcard .lines { margin: 1rem 0 0; padding: 0; list-style: none; font-size: 1.65rem; font-weight: 600; line-height: 1.55; }
+  .pcard .lines li { padding: .45rem 0; border-top: .1rem solid var(--line); }
+  .pcard .lines li:first-child { border-top: 0; }
+  .pcard .lines li.hl span { background-image: linear-gradient(var(--mark), var(--mark)); background-repeat: no-repeat; background-position: 0 82%; background-size: 0% 70%; transition: background-size .7s ease; }
+  .pcard.after.lit .lines li.hl span { background-size: 100% 70%; }
+  .case { border: .1rem solid var(--line); border-radius: 1.6rem; padding: 1.3rem 1.8rem; display: grid; grid-template-columns: 1fr auto; column-gap: 1.6rem; align-items: center; }
+  .case-k { grid-column: 1 / -1; font-size: 1rem; font-weight: 800; letter-spacing: .14em; color: var(--accent); }
+  .case-t { font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; margin-top: .3rem; }
+  .case p { grid-column: 1; margin: .4rem 0 0; font-size: 1.3rem; line-height: 1.55; color: var(--sub); }
+  .case .more { grid-column: 2; grid-row: 2 / span 2; }
+  .more { border: 0; background: var(--ink); color: #fff; font-size: 1.25rem; font-weight: 700; padding: .7rem 1.3rem; border-radius: 99px; cursor: pointer; white-space: nowrap; }
+  .more:hover { background: var(--accent); }
+  .more.ghost { background: #fff; color: var(--ink); border: .1rem solid var(--ink); }
+  .take { grid-column: 1 / -1; font-size: 2rem; font-weight: 800; letter-spacing: -.02em; padding-top: 1.2rem; border-top: .15rem solid var(--ink); }
+
+  /* 정리 */
+  .sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+  .sc { border-radius: 1.6rem; padding: 1.3rem 1.6rem; background: var(--paper); }
+  .sc .ph-h { margin-bottom: .8rem; }
+  .sc .it { padding: .7rem 0; border-top: .1rem solid var(--line); } .sc .it:first-of-type { border-top: 0; }
+  .sc .it b { display: block; font-size: 1.6rem; font-weight: 800; } .sc .it b i { font-style: normal; color: var(--accent); margin-right: .5rem; }
+  .sc .it span { display: block; margin-top: .25rem; font-size: 1.3rem; color: var(--sub); line-height: 1.5; }
+  .sc.wide { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; align-items: center; background: #fff; border: .1rem solid var(--line); }
+  .sc.wide .it { border: 0; padding: 0; }
+
+  /* 조심할 것, 학생 */
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+  .c3 { border-radius: 1.6rem; padding: 1.5rem 1.8rem; border: .1rem solid var(--line); }
+  .c3 .n { font-size: 1.05rem; font-weight: 800; letter-spacing: .14em; color: var(--accent); }
+  .c3 h3 { margin: .4rem 0 .9rem; font-size: 2.4rem; font-weight: 800; letter-spacing: -.03em; }
+  .c3 ul { margin: 0; padding-left: 1.4rem; font-size: 1.55rem; line-height: 1.75; }
+  .c3 .say { margin-top: 1.2rem; padding-top: 1rem; border-top: .1rem solid var(--line); font-size: 1.4rem; line-height: 1.55; color: var(--sub); }
+  .slogan { margin-top: 2.2rem; font-size: 4.2rem; font-weight: 800; letter-spacing: -.04em; }
+
+  /* 마지막 */
+  .endv { background: var(--dark); color: #fff; justify-content: center; }
+  .stage.dark .top { background: rgba(16,32,26,.92); border-color: #2A2B2E; color: #fff; }
+  .stage.dark .nums button.cur, .stage.dark .nums button:hover { color: #fff; }
+  .stage.dark .brand span, .stage.dark .bot { color: #A0A4AA; }
+  .stage.dark .bot { background: var(--dark); border-color: #2A2B2E; } .stage.dark .bot .pg b, .stage.dark .bot .ttl { color: #fff; }
+  .stage.dark .tools button, .stage.dark .bot .arw button { background: transparent; border-color: #3A3B3F; color: #fff; }
+  .endv h1 { margin: 0; font-size: 7.4rem; font-weight: 800; letter-spacing: -.05em; line-height: 1.08; }
+  .endv h1 em { color: var(--mark); }
+  .endv p { font-size: 2.2rem; margin: 1.6rem 0 0; color: #D7D9DC; }
+  .endv .acts { display: flex; gap: .8rem; margin-top: 2.6rem; }
+  .endv .acts button { font-size: 1.35rem; font-weight: 700; padding: .8rem 1.5rem; border-radius: 99px; border: .1rem solid #fff; background: transparent; color: #fff; cursor: pointer; }
+  .endv .acts button.pri { background: #fff; color: var(--ink); }
+
+  /* 창 (자세히 보기, 전체 슬라이드, 지침서) */
+  .mo { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(16,32,26,.55); backdrop-filter: blur(.3rem); }
+  .mo[hidden] { display: none; }
+  .mcard { position: relative; width: 70rem; max-width: 94vw; max-height: 86vh; overflow: auto; background: #fff; border-radius: 2rem; padding: 2.4rem 2.8rem 2.6rem; animation: rise .35s cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(1.5rem) scale(.98); } to { opacity: 1; transform: none; } }
+  .mclose { position: sticky; float: right; top: 0; margin: -1rem -1.2rem 0 1rem; z-index: 2; width: 3rem; height: 3rem; border-radius: 50%; border: .1rem solid var(--line); background: #fff; font-size: 1.6rem; cursor: pointer; }
+  .mclose:hover { border-color: var(--ink); }
+  .m-k { font-size: 1.05rem; font-weight: 800; letter-spacing: .14em; color: var(--accent); }
+  .mcard h3 { margin: .4rem 0 .6rem; font-size: 2.6rem; font-weight: 800; letter-spacing: -.03em; }
+  .m-d { margin: 0 0 1.4rem; font-size: 1.45rem; line-height: 1.6; color: var(--sub); }
+  .who { font-size: 1.15rem; color: var(--sub); margin: 1rem 0 .35rem; } .who b { color: var(--ink); margin-right: .5rem; font-size: 1.25rem; }
+  .bubble { font-size: 1.45rem; line-height: 1.65; padding: 1.1rem 1.5rem; border-radius: 1.4rem; }
+  .bubble p { margin: 0 0 .45em; } .bubble p:last-child { margin: 0; }
+  .bubble.t { background: var(--dark); color: #fff; border-bottom-left-radius: .4rem; } .bubble.t .mk { color: var(--ink); }
+  .bubble.c { background: var(--accent-soft); border-bottom-left-radius: .4rem; }
+  .m-res { margin-top: 1.4rem; border-radius: 1.4rem; background: var(--paper); padding: 1.1rem 1.4rem; }
+  .m-rk { font-size: 1.15rem; font-weight: 700; color: var(--sub); margin-bottom: .7rem; }
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+  .pc2 { font-size: 1.25rem; font-weight: 600; padding: .4rem .9rem; border-radius: .8rem; background: #fff; border: .1rem solid var(--line); }
+  .op { font-size: 1.6rem; font-weight: 800; color: var(--faint); }
+  .fin { font-size: 1.3rem; font-weight: 800; padding: .5rem 1rem; border-radius: .8rem; background: var(--dark); color: #fff; box-shadow: 0 0 0 .22rem var(--mark); }
+  .rt { width: 100%; border-collapse: collapse; margin-top: .4rem; font-size: 1.3rem; }
+  .rt td { padding: .65rem .4rem; border-top: .1rem solid var(--line); vertical-align: baseline; line-height: 1.6; }
+  .rt td:first-child { width: 15rem; font-weight: 800; }
+  .tag { display: inline-block; font-size: 1.1rem; font-weight: 700; padding: .1rem .75rem; border-radius: 99px; border: .1rem solid; margin-right: .5rem; white-space: nowrap; background: #fff; font-family: inherit; }
+  .t-doc { color: #1D6B47; border-color: #9FD8BA; background: #EAF7F0; } .t-req { color: var(--accent-ink); border-color: #A9D9BD; background: var(--accent-soft); }
+  .t-guess { color: #9A4A12; border-color: #FFC9A0; background: #FFF1E6; } .t-opp { color: #B3282D; border-color: #FFB9B9; background: #FFEDED; }
+  .gbtn { cursor: pointer; text-decoration: underline dotted; text-underline-offset: .25rem; } .gbtn:hover { box-shadow: 0 0 0 .15rem var(--mark); }
+  .parts { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: 1rem; }
+  .part { border-radius: 1.1rem; padding: .8rem 1.1rem; background: var(--paper); }
+  .part b { display: block; font-size: 1.1rem; font-weight: 800; letter-spacing: .06em; color: var(--accent); }
+  .part span { font-size: 1.4rem; font-weight: 600; line-height: 1.45; }
+  .note { margin-top: 1.2rem; font-size: 1.3rem; line-height: 1.6; color: var(--sub); border-left: .3rem solid var(--mark); padding: .2rem 0 .2rem 1rem; }
+  .steps2 { display: grid; gap: .8rem; margin-top: .4rem; }
+  .s2 { display: grid; grid-template-columns: 3rem 1fr; gap: 1rem; align-items: start; background: var(--paper); border-radius: 1.2rem; padding: 1rem 1.2rem; font-size: 1.4rem; line-height: 1.6; }
+  .s2 i { font-style: normal; font-weight: 800; font-size: 1.6rem; color: var(--accent); }
+  .reflist { margin: .4rem 0 0; padding: 0; list-style: none; }
+  .reflist li { padding: .8rem 0; border-top: .1rem solid var(--line); font-size: 1.3rem; line-height: 1.6; }
+  .reflist li:first-child { border-top: 0; }
+  .reflist a { color: var(--accent-ink); font-weight: 700; }
+  .reflist small { display: block; color: var(--sub); font-size: 1.15rem; }
+  .ovgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-top: 1.2rem; }
+  .ovgrid button { text-align: left; border: .1rem solid var(--line); background: #fff; border-radius: 1.2rem; padding: .9rem 1.1rem; cursor: pointer; font-size: 1.3rem; font-weight: 700; line-height: 1.4; }
+  .ovgrid button i { display: block; font-style: normal; font-size: 1.05rem; color: var(--accent); font-weight: 800; letter-spacing: .08em; }
+  .ovgrid button:hover, .ovgrid button.cur { border-color: var(--ink); }
+  .gr { padding: .6rem 1rem; margin-bottom: .45rem; background: var(--paper); border-left: .3rem solid var(--line); border-radius: .3rem .9rem .9rem .3rem; line-height: 1.6; font-size: 1.35rem; }
+  .gr .d { display: block; font-size: 1.2rem; color: var(--sub); }
+  .gr.pick { background: #F1FAD6; border-left-color: var(--warm); box-shadow: 0 0 0 .2rem var(--mark); }
+  .where { font-size: 1.15rem; font-weight: 800; color: var(--sub); margin: 1.2rem 0 .4rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+    .slide { transform: none !important; } .a { opacity: 1 !important; transform: none !important; }
+  }
+
+  /* ---------- 2부 전용 ---------- */
+  .cover h1.mid { font-size: 7rem; }
+  .flow { position: relative; height: 30rem; display: grid; grid-template-columns: 14rem 4rem 1fr; align-items: center; gap: 0; }
+  .srcs div { white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { .bl { opacity: 1 !important; transform: none !important; } .pipe-line i { opacity: 1 !important; left: calc(100% - 1.1rem) !important; } }
+  .srcs { display: flex; flex-direction: column; gap: 1rem; }
+  .srcs div { background: #fff; border: .1rem solid var(--line); border-radius: 1.1rem; padding: .8rem 1rem; font-size: 1.3rem; font-weight: 800; box-shadow: 0 .8rem 1.6rem -1.2rem rgba(16,32,26,.4); animation: srcPulse 8s infinite; }
+  .srcs .sc2 { animation-delay: .4s; } .srcs .sc3 { animation-delay: .8s; }
+  @keyframes srcPulse { 0%, 6% { transform: translateX(0); border-color: var(--line); } 12%, 20% { transform: translateX(.8rem); border-color: var(--accent); } 28%, 100% { transform: translateX(0); border-color: var(--line); } }
+  .pipe-line { position: relative; height: .25rem; background: repeating-linear-gradient(90deg, var(--line) 0 .6rem, transparent .6rem 1.1rem); }
+  .pipe-line i { position: absolute; top: -.45rem; left: 0; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--accent); animation: dotMove 8s infinite; }
+  @keyframes dotMove { 0%, 18% { left: 0; opacity: 0; } 22% { opacity: 1; } 34% { left: calc(100% - 1.1rem); opacity: 1; } 38%, 100% { left: calc(100% - 1.1rem); opacity: 0; } }
+  .brw { background: #fff; border: .12rem solid var(--ink); border-radius: 1.4rem; overflow: hidden; box-shadow: 0 2rem 3.6rem -2.4rem rgba(16,32,26,.5); }
+  .brw-h { display: flex; align-items: center; gap: .45rem; padding: .7rem 1rem; border-bottom: .1rem solid var(--line); background: var(--paper); font-size: 1.1rem; font-weight: 700; color: var(--sub); }
+  .brw-h b { width: .8rem; height: .8rem; border-radius: 50%; background: var(--line); } .brw-h span { margin-left: .6rem; }
+  .brw-b { padding: 1.4rem; display: flex; flex-direction: column; gap: .9rem; min-height: 20rem; }
+  .bl { border-radius: .6rem; opacity: 0; animation: build 8s infinite; }
+  .b1 { height: 2.4rem; width: 70%; background: var(--ink); animation-delay: 0s; }
+  .b2 { height: 1.1rem; width: 50%; background: var(--line); animation-delay: .25s; }
+  .bc { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+  .b3 { height: 6.5rem; background: var(--accent-soft); animation-delay: .5s; } .b4 { height: 6.5rem; background: #EAF7C4; animation-delay: .75s; }
+  .b5 { height: 2.6rem; width: 38%; border-radius: 99px; background: var(--accent); animation-delay: 1s; }
+  @keyframes build { 0%, 38% { opacity: 0; transform: translateY(.8rem); } 46%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
+  .card4 { border-radius: 1.6rem; padding: 1.4rem 1.5rem; background: var(--paper); display: flex; flex-direction: column; gap: .6rem; }
+  .card4 .n { font-size: 1.05rem; font-weight: 800; letter-spacing: .14em; color: var(--accent); }
+  .card4 h3 { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.3; }
+  .card4 p { margin: 0; font-size: 1.4rem; line-height: 1.6; color: var(--sub); }
+  .card4 .ex { margin-top: auto; padding-top: .8rem; border-top: .1rem solid var(--line); font-size: 1.25rem; color: var(--ink); line-height: 1.5; }
+  .card4 .ex b { display: block; font-size: 1rem; font-weight: 800; letter-spacing: .1em; color: var(--accent); margin-bottom: .2rem; }
+  .note2 { margin-top: 1.6rem; font-size: 1.5rem; line-height: 1.6; color: var(--sub); border-left: .35rem solid var(--mark); padding: .3rem 0 .3rem 1.2rem; }
+  .note2 b { color: var(--ink); }
+
+  .prep { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+  .pp { border: .1rem solid var(--line); border-radius: 1.6rem; padding: 1.5rem 1.8rem; }
+  .pp .ico { font-size: 2.6rem; }
+  .pp h3 { margin: .4rem 0 .3rem; font-size: 2.3rem; font-weight: 800; letter-spacing: -.03em; }
+  .pp .tags { display: flex; gap: .4rem; margin-bottom: .8rem; }
+  .pp .tags span { font-size: 1.05rem; font-weight: 800; padding: .15rem .7rem; border-radius: 99px; background: var(--accent-soft); color: var(--accent-ink); }
+  .pp ul { margin: 0; padding-left: 1.4rem; font-size: 1.5rem; line-height: 1.75; }
+
+  .refs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+  .ref { border: .1rem solid var(--line); border-radius: 1.5rem; padding: 1.3rem 1.5rem; display: flex; flex-direction: column; gap: .5rem; }
+  .ref .k { font-size: 1.05rem; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+  .ref h3 { margin: 0; font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; }
+  .ref p { margin: 0; font-size: 1.35rem; line-height: 1.55; color: var(--sub); }
+  .ref .links { margin-top: auto; display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .6rem; }
+  .ref .links a { font-size: 1.15rem; font-weight: 700; color: var(--ink); text-decoration: none; border: .1rem solid var(--ink); border-radius: 99px; padding: .3rem .9rem; }
+  .ref .links a:hover { background: var(--ink); color: #fff; }
+  .ref.tip { background: var(--paper); border-color: var(--paper); }
+
+  .mdwrap { display: grid; grid-template-columns: 30rem 1fr; gap: 2.4rem; height: 100%; }
+  .mdbox { background: var(--dark); color: #E9EAEC; border-radius: 1.6rem; padding: 1.4rem 1.8rem; font-family: ui-monospace, "D2Coding", Consolas, "Malgun Gothic", monospace; font-size: 1.1rem; line-height: 1.45; white-space: pre-wrap; overflow: auto; min-height: 0; max-height: 37rem; }
+  .mdbox .h { color: var(--mark); font-weight: 700; } .mdbox .c { color: #8FD9AE; }
+  .acts2 { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.4rem; }
+  .acts2 button { font-size: 1.25rem; font-weight: 700; padding: .65rem 1.3rem; border-radius: 99px; border: .1rem solid var(--ink); background: #fff; cursor: pointer; }
+  .acts2 button.pri { background: var(--ink); color: #fff; }
+  .acts2 button:hover { box-shadow: 0 0 0 .2rem var(--mark); }
+
+  .ask { background: var(--paper); border-radius: 1.8rem; padding: 1.4rem 1.8rem; }
+  .ask .row { display: grid; grid-template-columns: 12rem 1fr; gap: 1.2rem; align-items: baseline; padding: .7rem 0; border-top: .1rem solid var(--line); }
+  .ask .row:first-of-type { border-top: 0; }
+  .ask .lb { font-size: 1.15rem; font-weight: 800; color: var(--accent-ink); background: var(--accent-soft); border-radius: 99px; padding: .25rem .8rem; justify-self: start; white-space: nowrap; }
+  .ask .tx { font-size: 1.65rem; font-weight: 600; line-height: 1.6; }
+  .askfoot { display: flex; align-items: center; gap: 1rem; margin-top: 1.1rem; font-size: 1.3rem; color: var(--sub); }
+
+  .flow6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
+  .st { position: relative; border-radius: 1.4rem; padding: 1.2rem 1.2rem 1.3rem; background: var(--paper); display: flex; flex-direction: column; gap: .5rem; }
+  .st:not(:last-child)::after { content: ""; position: absolute; right: -.95rem; top: 2rem; width: .9rem; height: .9rem; border-top: .2rem solid var(--faint); border-right: .2rem solid var(--faint); transform: rotate(45deg); }
+  .st .n { width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: #fff; font-weight: 800; font-size: 1.3rem; }
+  .st h3 { margin: .3rem 0 0; font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; }
+  .st p { margin: 0; font-size: 1.3rem; line-height: 1.55; color: var(--sub); }
+  .st .tq { margin-top: auto; display: flex; gap: .3rem; flex-wrap: wrap; }
+  .st .tq span { font-size: 1rem; font-weight: 800; padding: .1rem .55rem; border-radius: 99px; background: var(--accent-soft); color: var(--accent-ink); }
+
+  .fix4 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .fx { border: .1rem solid var(--line); border-radius: 1.5rem; padding: 1.2rem 1.6rem; }
+  .fx .k { font-size: 1.05rem; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+  .fx p { margin: .5rem 0 0; font-size: 1.85rem; font-weight: 700; line-height: 1.55; letter-spacing: -.01em; }
+
+  .quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.3rem; }
+  .qt { border-radius: 1.6rem; padding: 1.5rem 1.7rem; background: #fff; border: .1rem solid var(--line); display: flex; flex-direction: column; gap: .8rem; }
+  .qt .who2 { font-size: 1.1rem; color: var(--sub); font-weight: 700; }
+  .qt blockquote { margin: 0; font-size: 1.75rem; font-weight: 700; line-height: 1.6; }
+  .qt .res { margin-top: auto; padding-top: .9rem; border-top: .1rem solid var(--line); font-size: 1.4rem; line-height: 1.5; }
+  .qt .res b { display: block; font-size: 1rem; letter-spacing: .12em; color: var(--accent); }
+
+  .editwrap { display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem; }
+  .tryit { border: .15rem solid var(--ink); border-radius: 1.8rem; padding: 1.5rem 1.8rem; }
+  .tryit h3 { margin: 0 0 .8rem; font-size: 2.1rem; font-weight: 800; letter-spacing: -.02em; }
+  .tryit ol { margin: 0; padding-left: 1.6rem; font-size: 1.5rem; line-height: 1.8; }
+  .tryit .kbd { display: inline-block; border: .1rem solid var(--ink); border-bottom-width: .25rem; border-radius: .5rem; padding: 0 .5rem; font-weight: 800; font-size: 1.3rem; }
+
+  .checks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+  .ck { border-radius: 1.5rem; padding: 1.3rem 1.6rem; background: var(--paper); }
+  .ck .n { font-size: 1.05rem; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+  .ck h3 { margin: .3rem 0 .4rem; font-size: 2rem; font-weight: 800; }
+  .ck p { margin: 0; font-size: 1.4rem; line-height: 1.6; color: var(--sub); }
+
+  .map7 { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1.6rem; }
+  .m7 { display: grid; grid-template-columns: 4rem 18rem 1fr; align-items: baseline; gap: .8rem; padding: .85rem 0; border-top: .1rem solid var(--line); }
+  .m7 .tn { font-size: 2rem; font-weight: 800; color: var(--accent); }
+  .m7 b { font-size: 1.55rem; font-weight: 800; } .m7 span { font-size: 1.35rem; color: var(--sub); line-height: 1.5; }
+
+
+  .fixdemo { display: grid; grid-template-columns: 1fr 32rem; gap: 3rem; align-items: start; }
+  .reqs { display: flex; flex-direction: column; gap: 1rem; }
+  .req { background: var(--dark); color: #fff; border-radius: 1.4rem; border-bottom-right-radius: .4rem; padding: 1rem 1.5rem; }
+  .req small { display: block; font-size: 1.05rem; font-weight: 800; letter-spacing: .06em; color: #A0A4AA; margin-bottom: .3rem; }
+  .req p { margin: 0; font-size: 1.55rem; line-height: 1.6; } .req .mk { color: var(--ink); background-size: 100% 100%; background-position: 0 0; padding: .05em .2em; border-radius: .3rem; }
+  .phone { border: .55rem solid var(--ink); border-radius: 3rem; padding: 1.2rem 1.4rem 1rem; background: #fff; box-shadow: 0 2rem 3.6rem -2.4rem rgba(16,32,26,.55); }
+  .ph-top { display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: 800; color: var(--sub); margin-bottom: .6rem; }
+  .stack { display: grid; } .stack > * { grid-area: 1 / 1; }
+  .sw { opacity: 0; transition: opacity .45s ease; pointer-events: none; } .sw.in { opacity: 1; pointer-events: auto; }
+  .ph-q { font-size: 1rem; font-weight: 700; line-height: 1.5; margin-bottom: .8rem; } .ph-q.big { font-size: 1.55rem; line-height: 1.35; }
+  .opts { display: grid; gap: .4rem; align-content: start; }
+  .opts.small .o { font-size: .95rem; padding: .25rem .5rem; border: .1rem solid var(--line); border-radius: .4rem; }
+  .opts.small .o.pick { border-color: #9FD8BA; background: #EAF7F0; }
+  .opts.big { gap: .5rem; } .opts.big .o { font-size: 1.15rem; font-weight: 700; padding: .7rem .9rem; border: .15rem solid var(--line); border-radius: 1rem; }
+  .opts.big .o.wrong { border-color: #FFB9B9; background: #FFEDED; }
+  .fb { margin-top: .8rem; border-radius: 1rem; padding: .65rem .9rem; font-size: 1.05rem; font-weight: 700; line-height: 1.45; }
+  .fb.ans { background: #EAF7F0; color: #1D6B47; } .fb.hint { background: #F1FAD6; color: #6B5200; }
+  .ph-cap { margin-top: .7rem; text-align: center; font-size: 1.05rem; font-weight: 800; color: var(--accent); display: grid; } .ph-cap > * { grid-area: 1 / 1; }
+
+  /* 편집 모드 */
+  #editbar { position: fixed; left: 50%; top: .8rem; transform: translateX(-50%); z-index: 70; display: flex; align-items: center; gap: .7rem; background: #10201A; color: #fff; border-radius: 99px; padding: .45rem .5rem .45rem 1.3rem; font-size: 1.2rem; box-shadow: 0 1rem 2.4rem -1rem rgba(0,0,0,.55); white-space: nowrap; }
+  #editbar[hidden] { display: none; }
+  #editbar b { font-weight: 800; } #editbar span { color: #BFC3C8; }
+  #editbar button { border: 0; border-radius: 99px; padding: .45rem 1rem; font-size: 1.15rem; font-weight: 700; cursor: pointer; background: #2B2D31; color: #fff; font-family: inherit; }
+  #editbar button:hover { background: #3A3D42; }
+  #editbar button.pri { background: #D2F28B; color: #10201A; }
+  #edBtn[aria-pressed="true"] { background: #D2F28B; border-color: #D2F28B; color: #10201A; }
+  body.editing [contenteditable="true"] { outline: .14rem dashed rgba(31,122,76,.55); outline-offset: .25rem; border-radius: .3rem; cursor: text; }
+  body.editing [contenteditable="true"]:hover { background: rgba(210,242,139,.12); }
+  body.editing [contenteditable="true"]:focus { outline: .2rem solid #1F7A4C; background: rgba(210,242,139,.2); }
+  body.editing .slide.on .rv { opacity: 1; transform: none; pointer-events: auto; }
+  body.editing .slide:not(.on) * { pointer-events: none !important; }
+  .ed-toast { position: fixed; left: 50%; bottom: 5rem; transform: translateX(-50%); z-index: 80; background: #10201A; color: #fff; padding: .6rem 1.5rem; border-radius: 99px; font-size: 1.25rem; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .ed-toast.show { opacity: 1; }
+
+  /* ---------- 3부 전용 ---------- */
+  .cover h1.mid { font-size: 6.4rem; }
+  .grid4.g3 { grid-template-columns: repeat(3, 1fr); }
+  .tgt { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.6rem; align-items: center; }
+  .appmock { background: #fff; border: .12rem solid var(--ink); border-radius: 1.4rem; overflow: hidden; box-shadow: 0 2rem 3.6rem -2.4rem rgba(16,32,26,.5); }
+  .am-h { display: flex; align-items: center; gap: .45rem; padding: .7rem 1rem; border-bottom: .1rem solid var(--line); background: var(--paper); font-size: 1.1rem; font-weight: 700; color: var(--sub); }
+  .am-h b { width: .8rem; height: .8rem; border-radius: 50%; background: var(--line); } .am-h span { margin-left: .6rem; }
+  .feats { display: grid; gap: 1rem; }
+  .ft { display: grid; grid-template-columns: 4.6rem 1fr; gap: 1.2rem; align-items: center; background: var(--paper); border-radius: 1.4rem; padding: 1rem 1.4rem; }
+  .ft .ico { font-size: 2.8rem; text-align: center; }
+  .ft b { display: block; font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; }
+  .ft p { margin: .2rem 0 0; font-size: 1.3rem; color: var(--sub); line-height: 1.5; }
+  .done { display: grid; gap: .9rem; }
+  .dn { display: grid; grid-template-columns: 3.6rem 1fr; gap: 1.4rem; align-items: center; background: var(--paper); border-radius: 1.4rem; padding: 1.1rem 1.6rem; }
+  .dn .bx { width: 3.2rem; height: 3.2rem; border-radius: .9rem; border: .15rem solid var(--ink); display: grid; place-items: center; font-weight: 800; font-size: 1.5rem; background: #fff; }
+  .dn .tx { font-size: 1.85rem; font-weight: 700; line-height: 1.5; }
+  .stg-g { flex: 1; min-height: 0; display: grid; grid-template-columns: 31rem 1fr; column-gap: 3.2rem; }
+  .stg-l { display: flex; flex-direction: column; }
+  .stg-l .bignum { font-size: 11rem; }
+  .stg-l h2 { font-size: 3.6rem; margin-top: 1rem; }
+  .stg-r { display: flex; flex-direction: column; gap: 1.3rem; min-height: 0; padding-top: .4rem; }
+  .say { background: var(--paper); border-radius: 1.8rem; padding: 1.3rem 1.8rem 1.5rem; }
+  .say .sh { display: flex; align-items: center; justify-content: space-between; font-size: 1.15rem; font-weight: 800; letter-spacing: .08em; color: var(--sub); }
+  .say .sx { margin: .8rem 0 0; font-size: 1.65rem; font-weight: 600; line-height: 1.65; }
+  .two { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.2rem; }
+  .bx2 { border: .1rem solid var(--line); border-radius: 1.5rem; padding: 1.2rem 1.6rem 1.3rem; }
+  .bx2 .k { font-size: 1.05rem; font-weight: 800; letter-spacing: .12em; color: var(--accent); margin-bottom: .6rem; }
+  .bx2 ul { margin: 0; padding-left: 1.3rem; font-size: 1.4rem; line-height: 1.6; font-weight: 600; }
+  .bx2 p { margin: 0; font-size: 1.4rem; line-height: 1.65; font-weight: 600; }
+  .ask.tight .tx { font-size: 1.5rem; line-height: 1.55; }
+  .ask.tight .row { padding: .55rem 0; }
+  .map7 .m7 { padding: .7rem 0; }
+  .endv h1 { font-size: 7rem; }
+  .am-b { position: relative; aspect-ratio: 16 / 9; background: radial-gradient(ellipse at 50% 60%, #2C513C 0%, #163B2C 70%), #163B2C; overflow: hidden; }
+  .am-b::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(210,242,139,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(210,242,139,.05) 1px, transparent 1px); background-size: 3.4rem 3.4rem; }
+  .am-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ln { fill: rgba(210,242,139,.07); stroke: rgba(210,242,139,.26); stroke-width: 1.5; transition: fill .15s; }
+  .ln.cur { fill: rgba(210,242,139,.2); stroke: rgba(210,242,139,.6); }
+  .ln.hit { fill: rgba(210,242,139,.75); }
+  .lt { fill: rgba(232,244,218,.7); font-size: 20px; font-weight: 800; text-anchor: middle; font-family: var(--title); }
+  .bn { stroke: #D2F28B; stroke-width: 3.2; stroke-linecap: round; }
+  .jt { fill: #fff; stroke: #163B2C; stroke-width: 1.5; }
+  #amHand.fist .bn { stroke: #fff; }
+  #amHand.fist .jt { fill: #D2F28B; }
+  .am-tag { position: absolute; left: 1.1rem; top: .9rem; display: flex; align-items: center; gap: .5rem; font-size: 1rem; font-weight: 800; letter-spacing: .08em; color: #E8F4DA; }
+  .am-tag i { width: .8rem; height: .8rem; border-radius: 50%; background: #FF5A36; animation: liveDot 1.4s infinite; }
+  .am-tag span { font-weight: 600; letter-spacing: 0; color: #B4CE94; margin-left: .4rem; }
+  @keyframes liveDot { 50% { opacity: .25; } }
+  .am-st { position: absolute; right: 1.1rem; top: .8rem; font-size: 1.5rem; font-weight: 800; color: #10201A; background: var(--mark); border-radius: 99px; padding: .4rem 1.3rem; min-width: 9rem; text-align: center; transition: background .12s, transform .12s; }
+  .am-st.on { background: #fff; transform: scale(1.08); }
+
+  /* ---------- 색 조합 재정리: 밝은 초록 + 노랑초록, 하늘, 주황 포인트 ---------- */
+  :root { --ink: #1E2B26; --sub: #52615A; --accent: #09804D; --accent-ink: #0A6B40; --accent-soft: #DDF3E5; --mark: #CDEF7B; --warm: #F2711C; --dark: #0D7049; --paper: #F3F8F1; --line: #DCE8DD; }
+  :is(.c3, .pp, .ref, .fx, .qt, .card4, .st, .ft, .dn):nth-child(4n+1) { --tc: #DDF3E5; --lc: #0A6B40; }
+  :is(.c3, .pp, .ref, .fx, .qt, .card4, .st, .ft, .dn):nth-child(4n+2) { --tc: #F6F9DC; --lc: #5E6F06; }
+  :is(.c3, .pp, .ref, .fx, .qt, .card4, .st, .ft, .dn):nth-child(4n+3) { --tc: #E3EEFF; --lc: #1D5CCB; }
+  :is(.c3, .pp, .ref, .fx, .qt, .card4, .st, .ft, .dn):nth-child(4n+4) { --tc: #FFEADB; --lc: #BE4A0A; }
+  :is(.c3, .pp, .ref, .fx, .qt, .card4, .st, .ft, .dn) { background: var(--tc); border-color: transparent; }
+  .c3 .n, .ref .k, .fx .k, .card4 .n, .qt .res b, .card4 .ex b { color: var(--lc); }
+  .c3 h3, .pp h3, .ref h3, .card4 h3, .st h3, .ft b { color: var(--lc); }
+  .pp .tags span { background: #fff; color: var(--lc); }
+  .st .n { background: var(--lc); }
+  .qt .res { border-top-color: rgba(30,43,38,.14); }
+  .card4 .ex { border-top-color: rgba(30,43,38,.14); }
+  .dn .bx { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .ref .links a { color: var(--lc); border-color: var(--lc); background: #fff; }
+  .ref .links a:hover { background: var(--lc); color: #fff; }
+  .say { background: #F6F9DC; }
+  .say .sh span { color: #5E6F06; }
+  .two .bx2:nth-child(1) { background: #DDF3E5; --lc: #0A6B40; border-color: transparent; }
+  .two .bx2:nth-child(2) { background: #FFEADB; --lc: #BE4A0A; border-color: transparent; }
+  .bx2 .k { color: var(--lc); }
+  .ask { background: #F3F8F1; }
+  .ask .lb { background: var(--accent); color: #fff; }
+  .more, .cta, .chip, .abc .k b, .acts2 button.pri { background: var(--accent); }
+  .more:hover { background: var(--accent-ink); }
+  .more.ghost { background: #fff; color: var(--accent-ink); border: .1rem solid var(--accent); }
+  .bignum { -webkit-text-stroke: .16rem var(--accent); }
+  .take { border-top: .15rem solid var(--accent); }
+  .note2 { border-left-color: var(--accent); }
+  .note2 b { color: var(--accent-ink); }
+  .note2.warn { border-left-color: var(--warm); }
+  .note2.warn b { color: #BE4A0A; }
+  .m7 b { color: var(--accent-ink); }
+  .m7:nth-child(4n+3) .tn, .m7:nth-child(4n+4) .tn { color: #BE4A0A; }
+  .band { background: var(--dark); }
+  .endv { background: var(--dark); }
+  .brw, .appmock { border-color: var(--accent); }
+  .b1 { background: var(--accent); }
+  .srcs .sc1 { background: #DDF3E5; border-color: transparent; }
+  .srcs .sc2 { background: #F6F9DC; border-color: transparent; }
+  .srcs .sc3 { background: #E3EEFF; border-color: transparent; }
+  .b4 { background: var(--mark); }
+  .eyebrow { color: var(--accent); }
+  .feats .ft p, .card4 p, .ref p, .st p { color: var(--sub); }
+  /* 모션 화면: 밝은 초록 바탕, 주먹일 때 주황 */
+  .am-b { background: radial-gradient(ellipse at 50% 65%, #3FAE7C 0%, #1B7A56 75%), #1B7A56; }
+  .am-b::before { background: linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px); background-size: 3.4rem 3.4rem; }
+  .ln { fill: rgba(255,255,255,.10); stroke: rgba(255,255,255,.38); }
+  .ln.cur { fill: rgba(255,255,255,.26); stroke: rgba(255,255,255,.8); }
+  .ln.hit { fill: rgba(205,239,123,.95); }
+  .lt { fill: rgba(255,255,255,.92); }
+  .jt { stroke: #1B7A56; }
+  #amHand.fist .bn { stroke: #FFC46B; }
+  #amHand.fist .jt { fill: #FFC46B; }
+  .am-tag { color: #fff; } .am-tag span { color: #E3F5D2; }
+  .am-st.on { background: #FFC46B; }
+</style>
+</head>
+<body class="">
+<main class="stage" id="stage">
+  <header class="top">
+    <button class="brand" type="button" data-go="0" aria-label="표지로"><b>AI <i>×</i> 바이브코딩</b><span>PART 3</span></button>
+    <nav class="nums" id="nums" aria-label="슬라이드 번호"></nav>
+    <div class="tools"><a class="homeBtn" href="index.html" aria-label="목차 페이지로">← 목차</a><button type="button" id="ovBtn">전체 슬라이드</button><button type="button" id="srcBtn">자료 출처</button><button type="button" id="edBtn" aria-pressed="true">편집</button><button type="button" id="fsBtn" aria-label="전체화면">⛶</button></div>
+  </header>
+
+    <!-- 1 표지 -->
+  <section class="slide cover" data-title="코드는 AI가, 확인은 내가" data-steps="0">
+    <div class="cv-l">
+      <div class="eyebrow a" style="--i:0">PART 3<span>세 번째 시간</span></div>
+      <h1 class="mid a" style="--i:1">코드는 AI가,<br><em>확인은 내가</em></h1>
+      <p class="cv-sub a" style="--i:2">손동작으로 연주하는 웹사이트를 <br>말로 만들어 봅니다.<br><span>빈 화면에서 시작해서, 한 단계씩 완성합니다.</span></p>
+      <div class="cv-meta a" style="--i:3">강사 : 정정훈</div>
+    </div>
+    <div class="cv-r a" style="--i:2">
+      <div class="flow" aria-hidden="true">
+        <div class="srcs"><div class="sc1">📝 완성 기준</div><div class="sc2">🎨 레퍼런스</div><div class="sc3">💬 요청</div></div>
+        <div class="pipe-line"><i></i></div>
+        <div class="brw"><div class="brw-h"><b></b><b></b><b></b><span>motion-lab.html</span></div><div class="brw-b"><div class="bl b1"></div><div class="bl b2"></div><div class="bc"><div class="bl b3"></div><div class="bl b4"></div></div><div class="bl b5"></div></div></div>
+      </div>
+      <p class="pb-cap">완성 기준과 레퍼런스와 요청이 모여 움직이는 앱이 됩니다</p>
+    </div>
+  </section>
+
+  <!-- 2 바이브코딩이란 -->
+  <section class="slide" data-title="바이브코딩이란" data-steps="1">
+    <div class="eyebrow a" style="--i:0">WHAT<span>바이브코딩이란</span></div>
+    <h2 class="a" style="--i:1">말로 설명하면 <em>AI가 코드</em>를 씁니다</h2>
+    <p class="lead a" style="--i:2">카메라와 소리처럼, 내 동작에 반응하는 웹사이트를 만듭니다.</p>
+    <div class="body">
+      <div class="three a" style="--i:3">
+        <div class="c3"><div class="n">AI</div><h3>코드를 씁니다</h3><ul><li>카메라 켜기, 손 찾기, 소리 내기를 파일로 만듭니다.</li><li>한 번에 길게 만들 수도, 한 단계씩 만들 수도 있습니다.</li></ul></div>
+        <div class="c3"><div class="n">나</div><h3>열어 보고 말합니다</h3><ul><li>파일을 브라우저로 엽니다.</li><li>눈과 귀로 확인합니다.</li><li>되지 않는 것을 이유와 함께 말합니다.</li></ul></div>
+        <div class="c3"><div class="n">나</div><h3>됐는지 판단합니다</h3><ul><li>완성 기준을 먼저 정합니다.</li><li>교실에서 써도 되는지 봅니다.</li><li>학생 정보가 새지 않는지 봅니다.</li></ul></div>
+      </div>
+      <p class="note2 rv" data-from="1">코드를 읽지 못해도 됩니다. <b>실행해서 확인할 수 있으면</b> 됩니다.</p>
+    </div>
+  </section>
+
+  <!-- 3 오늘 만들 것 -->
+  <section class="slide" data-title="오늘 만들 것, Motion Lab" data-steps="1">
+    <div class="eyebrow a" style="--i:0">TARGET<span>오늘 만들 것</span></div>
+    <h2 class="a" style="--i:1">손을 펴고 쥐면 <em>소리가 나는</em> 사이트</h2>
+    <div class="body">
+      <div class="tgt">
+        <div class="appmock a" style="--i:2" aria-hidden="true">
+          <div class="am-h"><b></b><b></b><b></b><span>motion-lab.html</span></div>
+          <div class="am-b" id="amStage">
+            <svg class="am-svg" viewBox="0 0 640 360" aria-hidden="true"><rect class="ln" x="24" y="24" width="66" height="276" rx="9"/><text class="lt" x="57" y="54">도</text><rect class="ln" x="98" y="24" width="66" height="276" rx="9"/><text class="lt" x="131" y="54">레</text><rect class="ln" x="172" y="24" width="66" height="276" rx="9"/><text class="lt" x="205" y="54">미</text><rect class="ln" x="246" y="24" width="66" height="276" rx="9"/><text class="lt" x="279" y="54">파</text><rect class="ln" x="320" y="24" width="66" height="276" rx="9"/><text class="lt" x="353" y="54">솔</text><rect class="ln" x="394" y="24" width="66" height="276" rx="9"/><text class="lt" x="427" y="54">라</text><rect class="ln" x="468" y="24" width="66" height="276" rx="9"/><text class="lt" x="501" y="54">시</text><rect class="ln" x="542" y="24" width="66" height="276" rx="9"/><text class="lt" x="575" y="54">도</text><circle id="amRip" cx="0" cy="0" r="0" fill="none" stroke="#D2F28B" stroke-width="3" opacity="0"/><g id="amHand"><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><line class="bn" x1="0" y1="0" x2="0" y2="0"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt tip" cx="0" cy="0" r="6"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt tip" cx="0" cy="0" r="6"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt tip" cx="0" cy="0" r="6"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt tip" cx="0" cy="0" r="6"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt" cx="0" cy="0" r="4.5"/><circle class="jt tip" cx="0" cy="0" r="6"/></g></svg>
+            <div class="am-tag"><i></i>LIVE <span>MediaPipe 손 관절 21개</span></div>
+            <div class="am-st" id="amChip">✋ 준비</div>
+          </div>
+        </div>
+        <div class="feats a" style="--i:3">
+          <div class="ft"><span class="ico">✋</span><div><b>손을 펴면 음을 고릅니다</b><p>카메라 위에 손 관절의 점과 선이 그려지고, 손이 있는 칸이 음이 됩니다.</p></div></div>
+          <div class="ft"><span class="ico">✊</span><div><b>주먹을 쥐면 소리가 납니다</b><p>손을 다시 펴야 다음 소리가 납니다.</p></div></div>
+          <div class="ft"><span class="ico">🎵</span><div><b>악기는 네 가지입니다</b><p>드럼, 베이스, 화음, 멜로디.</p></div></div>
+          <div class="ft"><span class="ico">🔒</span><div><b>영상은 저장하거나 보내지 않습니다</b><p>손 인식은 내 컴퓨터 안에서 합니다.</p></div></div>
+        </div>
+      </div>
+      <p class="note2 rv" data-from="1" style="margin-top:1.2rem">오늘은 <b>빈 화면에서 시작해서</b> 이 사이트를 한 단계씩 만듭니다. 위 화면은 강의용으로 그린 그림입니다.</p>
+    </div>
+  </section>
+
+  <!-- 4 완성 기준 -->
+  <section class="slide" data-title="완성 기준 먼저" data-steps="4">
+    <div class="eyebrow a" style="--i:0">GOAL<span>완성 기준</span></div>
+    <h2 class="a" style="--i:1">만들기 전에 <em>됐다의 기준</em>을 적습니다</h2>
+    <p class="lead a" style="--i:2">코드는 못 읽어도, 이 네 줄은 눈과 귀로 확인할 수 있습니다.</p>
+    <div class="body">
+      <div class="done" id="doneBox">
+        <div class="dn rv" data-from="1"><span class="bx">1</span><div class="tx ed">카메라를 켜면 내 모습이 거울처럼 보인다.</div></div>
+        <div class="dn rv" data-from="2"><span class="bx">2</span><div class="tx ed">손 위에 점과 선이 그려지고, 펴면 '준비', 주먹을 쥐면 '연주'라고 나온다.</div></div>
+        <div class="dn rv" data-from="3"><span class="bx">3</span><div class="tx ed">주먹을 쥘 때 소리가 한 번 난다. 손을 펴기 전에는 다시 나지 않는다.</div></div>
+        <div class="dn rv" data-from="4"><span class="bx">4</span><div class="tx ed">영상은 저장하거나 밖으로 보내지 않는다.</div></div>
+      </div>
+      <div class="askfoot rv" data-from="4"><button type="button" class="more" data-copyask="doneBox">완성 기준 복사하기</button><span>이 네 줄로 단계마다 됐는지 확인합니다.</span></div>
+    </div>
+  </section>
+
+  <!-- 5 준비물 -->
+  <section class="slide" data-title="붙일 것 세 가지" data-steps="1">
+    <div class="eyebrow a" style="--i:0">PREPARE<span>준비물</span></div>
+    <h2 class="a" style="--i:1">만들기 전에 붙일 것 <em>세 가지</em></h2>
+    <div class="body">
+      <div class="prep a" style="--i:2">
+        <div class="pp"><div class="ico">📝</div><h3>만들 것</h3><div class="tags"><span>무엇을, 누가</span></div><ul><li>무엇을 하는 사이트인지 한 문단</li><li>앞 장의 완성 기준 네 줄</li><li>쓸 기기: 노트북 카메라</li></ul></div>
+        <div class="pp"><div class="ico">🎨</div><h3>참고할 것</h3><div class="tags"><span>레퍼런스</span></div><ul><li>도구 이름: MediaPipe</li><li>소리는 파일 없이 브라우저에서</li><li>디자인은 AI에게 맡기기</li></ul></div>
+        <div class="pp"><div class="ico">📌</div><h3>조건</h3><div class="tags"><span>지킬 것</span></div><ul><li>HTML 파일 하나로</li><li>설치할 것 없이</li><li>영상은 저장하지 않기</li><li>한 손만 써도 되게</li></ul></div>
+      </div>
+      <p class="note2 warn rv" data-from="1"><b>카메라는 미리보기 창에서 막힐 수 있습니다.</b> 파일로 받아 크롬이나 엣지에서 직접 열어 확인합니다. 처음 켤 때는 인터넷이 필요합니다.</p>
+    </div>
+  </section>
+
+  <!-- 6 레퍼런스 -->
+  <section class="slide" data-title="레퍼런스 찾는 곳" data-steps="1">
+    <div class="eyebrow a" style="--i:0">REFERENCES<span>레퍼런스 찾는 곳</span></div>
+    <h2 class="a" style="--i:1">도구 이름은 알려 주고, <em>디자인은 맡깁니다</em></h2>
+    <div class="body">
+      <div class="refs a" style="--i:2">
+        <div class="ref"><div class="k">TECH</div><h3>손 인식</h3><p>구글 MediaPipe. 카메라 영상에서 손 관절 21개를 찾아 스켈레톤으로 그리고, 펼친 손과 주먹을 구분합니다.</p><div class="links"><a href="https://ai.google.dev/edge/mediapipe/solutions/gesture_recognizer" target="_blank" rel="noopener">MediaPipe ↗</a></div></div>
+        <div class="ref"><div class="k">SOUND</div><h3>소리</h3><p>브라우저가 소리를 직접 만듭니다. 음원 파일이 필요 없습니다. 다만 사용자가 버튼을 누른 뒤에야 소리를 낼 수 있습니다.</p><div class="links"><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener">Web Audio API ↗</a></div></div>
+        <div class="ref"><div class="k">DESIGN</div><h3>화면 디자인</h3><p>색, 글꼴, 배치는 정하지 않고 AI에게 맡깁니다. 마음에 안 들면 "더 밝게", "글자를 크게"처럼 말로 고칩니다.</p></div>
+      </div>
+      <p class="note2 rv" data-from="1"><b>도구 이름을 모르면 먼저 묻습니다.</b> "카메라로 손 모양을 알아내서 소리를 내는 웹사이트를 만들려면 어떤 도구가 있어?"</p>
+    </div>
+  </section>
+
+  <!-- 7 첫 요청 -->
+  <section class="slide" data-title="첫 요청 만들기" data-steps="5">
+    <div class="eyebrow a" style="--i:0">FIRST ASK<span>첫 요청</span></div>
+    <h2 class="a" style="--i:1">첫 요청에 <em>담을 것</em> 다섯 가지</h2>
+    <div class="body">
+      <div class="ask tight a" style="--i:2" id="askBox">
+        <div class="row rv" data-from="1"><span class="lb">목적</span><div class="tx ed">교사 연수에서 보여 줄, 손동작으로 연주하는 웹사이트를 만들려고 해. 코드를 모르는 선생님이 화면과 소리로 확인할 수 있어야 해.</div></div>
+        <div class="row rv" data-from="2"><span class="lb">참고</span><div class="tx ed">완성 기준 네 줄을 붙일게. 손 인식은 구글 MediaPipe를 쓰고, 손 위에 스켈레톤을 그려줘. 디자인은 네가 알아서 정해줘.</div></div>
+        <div class="row rv" data-from="3"><span class="lb">지킬 것</span><div class="tx ed">HTML 파일 하나로 만들고, 설치할 것은 없어야 해. 영상은 저장하거나 보내지 말고, 한 손만 써도 되게 해줘.</div></div>
+        <div class="row rv" data-from="4"><span class="lb">먼저 묻기</span><div class="tx ed">만들기 전에 궁금한 게 있으면 먼저 물어봐. 내가 말하지 않아서 네가 정한 것은 따로 알려줘.</div></div>
+        <div class="row rv" data-from="5"><span class="lb">나눠서</span><div class="tx ed">1단계 카메라 켜기까지만 만들어줘. 내가 열어서 확인한 다음에 2단계로 가자.</div></div>
+      </div>
+      <div class="askfoot rv" data-from="5"><button type="button" class="more" data-copyask="askBox">요청 복사하기</button><span>함께 붙일 것: 완성 기준 네 줄</span></div>
+    </div>
+  </section>
+
+  <!-- 8 만드는 순서 -->
+  <section class="slide" data-title="만드는 순서" data-steps="0">
+    <div class="eyebrow a" style="--i:0">FLOW<span>만드는 순서</span></div>
+    <h2 class="a" style="--i:1">한 번에 끝내지 않고, <em>한 단계씩</em></h2>
+    <div class="body">
+      <div class="flow6">
+        <div class="st a" style="--i:2"><span class="n">0</span><h3>뼈대 받기</h3><p>질문에 답하고, 단계 계획을 글로 받아 확인합니다.</p></div>
+        <div class="st a" style="--i:3"><span class="n">1</span><h3>카메라</h3><p>허용 창이 뜨고 내 모습이 보이는지 봅니다.</p></div>
+        <div class="st a" style="--i:4"><span class="n">2</span><h3>손 찾기</h3><p>펼친 손과 주먹이 구분되는지 봅니다.</p></div>
+        <div class="st a" style="--i:5"><span class="n">3</span><h3>소리</h3><p>주먹을 쥘 때 소리가 한 번 나는지 듣습니다.</p></div>
+        <div class="st a" style="--i:6"><span class="n">4</span><h3>음과 악기</h3><p>손 위치에 따라 음이 바뀌고, 악기를 고를 수 있습니다.</p></div>
+        <div class="st a" style="--i:7"><span class="n">5</span><h3>다듬기</h3><p>쓰는 사람에 맞춰 고치고, 교실에서 확인합니다.</p></div>
+      </div>
+      <p class="note2 a" style="--i:8">한 단계가 확인되기 전에는 다음으로 가지 않습니다. 안 되는 단계 위에 더 쌓으면, <b>어디가 문제인지</b> 알 수 없습니다.</p>
+    </div>
+  </section>
+
+  <!-- 9 단계 1 -->
+  <section class="slide" data-title="1단계 카메라 켜기" data-steps="2">
+    <div class="stg-g">
+      <div class="stg-l">
+        <div class="eyebrow a" style="--i:0">STEP<span>카메라</span></div>
+        <div class="bignum a" style="--i:1">1</div>
+        <h2 class="a" style="--i:2">카메라 켜기</h2>
+        <p class="desc a" style="--i:3">버튼을 누르면 허용 창이 뜨고, 내 모습이 화면에 나옵니다. 가장 먼저 확인할 것은 이것 하나입니다.</p>
+      </div>
+      <div class="stg-r">
+        <div class="say a" style="--i:2" id="s1"><div class="sh"><span>이렇게 말합니다</span><button type="button" class="more ghost" data-copy="s1tx">복사</button></div><p class="sx" id="s1tx">1단계만 만들어줘. 화면에 '카메라 시작' 버튼을 두고, 누르면 카메라를 켜서 내 모습을 거울처럼 보여줘. <span class="mk">카메라를 허용하지 않으면 무엇을 해야 하는지</span> 안내 문구를 보여줘. 손 인식과 소리는 아직 넣지 마.</p></div>
+        <div class="two">
+          <div class="bx2 rv" data-from="1"><div class="k">눈과 귀로 확인</div><ul><li>크롬이나 엣지로 파일을 열었다.</li><li>허용 창이 뜬다.</li><li>내가 오른쪽으로 움직이면 화면 속 나도 오른쪽으로 간다.</li><li>허용하지 않으면 안내 문구가 나온다.</li></ul></div>
+          <div class="bx2 rv" data-from="2"><div class="k">안 될 때</div><p>"카메라가 안 켜져. 크롬에서 파일을 직접 열었고, 화면에는 '카메라에 접근할 수 없습니다'라고 나와. 원인을 찾아줘."</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 단계 2 -->
+  <section class="slide" data-title="2단계 손 찾기" data-steps="2">
+    <div class="stg-g">
+      <div class="stg-l">
+        <div class="eyebrow a" style="--i:0">STEP<span>손 찾기</span></div>
+        <div class="bignum a" style="--i:1">2</div>
+        <h2 class="a" style="--i:2">손 찾기</h2>
+        <p class="desc a" style="--i:3">카메라 화면 위에 손 관절의 점과 선(스켈레톤)이 그려지고, 펼친 손과 주먹이 글자로 구분됩니다.</p>
+      </div>
+      <div class="stg-r">
+        <div class="say a" style="--i:2" id="s2"><div class="sh"><span>이렇게 말합니다</span><button type="button" class="more ghost" data-copy="s2tx">복사</button></div><p class="sx" id="s2tx">2단계로 가자. 카메라 화면 위에 손 관절의 점과 선(스켈레톤)을 그려줘. 손을 펴면 '준비', 주먹을 쥐면 '연주'라는 글자를 크게 보여줘. 손 인식은 MediaPipe를 써줘. <span class="mk">한 손만 있어도 되어야 해.</span> 소리는 아직 넣지 마.</p></div>
+        <div class="two">
+          <div class="bx2 rv" data-from="1"><div class="k">눈과 귀로 확인</div><ul><li>손 위에 점과 선이 따라다닌다.</li><li>손을 펴면 '준비'가 나온다.</li><li>주먹을 쥐면 '연주'가 나온다.</li><li>손을 화면 밖으로 빼면 글자가 사라진다.</li></ul></div>
+          <div class="bx2 rv" data-from="2"><div class="k">안 될 때</div><p>"손이 잘 안 잡혀. 교실이 어둡고 손이 화면 아래에 걸쳐 있어. 손 전체가 보이게 하라는 안내 문구를 넣어줘."</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 단계 3 -->
+  <section class="slide" data-title="3단계 소리 내기" data-steps="2">
+    <div class="stg-g">
+      <div class="stg-l">
+        <div class="eyebrow a" style="--i:0">STEP<span>소리</span></div>
+        <div class="bignum a" style="--i:1">3</div>
+        <h2 class="a" style="--i:2">소리 내기</h2>
+        <p class="desc a" style="--i:3">주먹을 쥐는 순간 소리가 한 번 납니다. 쥔 채로 있으면 다시 나지 않습니다.</p>
+      </div>
+      <div class="stg-r">
+        <div class="say a" style="--i:2" id="s3"><div class="sh"><span>이렇게 말합니다</span><button type="button" class="more ghost" data-copy="s3tx">복사</button></div><p class="sx" id="s3tx">3단계. 주먹을 쥐는 순간 소리가 한 번 나게 해줘. <span class="mk">손을 다시 펴기 전에는 소리가 또 나면 안 돼.</span> 소리 파일은 쓰지 말고 브라우저에서 직접 만들어줘. '소리 켜기' 버튼도 넣어줘.</p></div>
+        <div class="two">
+          <div class="bx2 rv" data-from="1"><div class="k">눈과 귀로 확인</div><ul><li>'소리 켜기'를 누른 뒤 주먹을 쥐면 소리가 난다.</li><li>쥔 채로 있으면 소리가 다시 나지 않는다.</li><li>손을 펴고 다시 쥐면 또 난다.</li><li>컴퓨터 음량이 켜져 있다.</li></ul></div>
+          <div class="bx2 rv" data-from="2"><div class="k">안 될 때</div><p>브라우저는 버튼을 누르기 전에는 소리를 막습니다. 그래도 안 나면 <b>F12 키</b>를 누르고, Console 탭의 빨간 글자를 복사해서 붙입니다.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 단계 4 -->
+  <section class="slide" data-title="4단계 음과 악기" data-steps="2">
+    <div class="stg-g">
+      <div class="stg-l">
+        <div class="eyebrow a" style="--i:0">STEP<span>음과 악기</span></div>
+        <div class="bignum a" style="--i:1">4</div>
+        <h2 class="a" style="--i:2">음과 악기</h2>
+        <p class="desc a" style="--i:3">화면을 여덟 칸으로 나누고, 손이 있는 칸의 음이 납니다. 악기를 바꾸면 같은 동작으로 다른 소리가 납니다.</p>
+      </div>
+      <div class="stg-r">
+        <div class="say a" style="--i:2" id="s4"><div class="sh"><span>이렇게 말합니다</span><button type="button" class="more ghost" data-copy="s4tx">복사</button></div><p class="sx" id="s4tx">4단계. 화면을 세로 여덟 칸으로 나누고, 손이 있는 칸을 강조해줘. 칸마다 다른 음이 나게 하고, 주먹을 쥐면 그 칸의 음이 나게 해줘. 악기는 드럼, 베이스, 화음, 멜로디 중에 고를 수 있게 해줘.</p></div>
+        <div class="two">
+          <div class="bx2 rv" data-from="1"><div class="k">눈과 귀로 확인</div><ul><li>칸이 여덟 개 보인다.</li><li>손을 옮기면 강조되는 칸이 바뀐다.</li><li>칸마다 음이 다르다.</li><li>악기를 바꾸면 소리의 느낌이 달라진다.</li></ul></div>
+          <div class="bx2 rv" data-from="2"><div class="k">안 될 때</div><p>"왼쪽으로 움직이면 오른쪽 칸이 켜져. <span class="mk">화면은 거울인데 칸 방향만 반대</span>인 것 같아. 같은 문제가 다른 곳에도 있는지 같이 봐줘."</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 안 될 때 쓰는 말 -->
+  <section class="slide" data-title="안 될 때 쓰는 말" data-steps="1">
+    <div class="eyebrow a" style="--i:0">STUCK<span>안 될 때</span></div>
+    <h2 class="a" style="--i:1">AI는 내 화면을 못 봅니다. <em>본 것</em>을 말합니다</h2>
+    <div class="body">
+      <div class="fix4">
+        <div class="fx a" style="--i:2"><div class="k">증상</div><p><span class="mk">버튼을 눌렀는데 아무 일도 없어.</span> <br>어느 단계에서 멈췄는지 본 대로.</p></div>
+        <div class="fx a" style="--i:3"><div class="k">환경</div><p><span class="mk">크롬에서, 파일을 직접 열었어.</span> <br>브라우저와 여는 방법.</p></div>
+        <div class="fx a" style="--i:4"><div class="k">화면 문구</div><p><span class="mk">화면에 이렇게 나와: (붙여넣기)</span> <br>F12 키, Console 탭의 빨간 글자를 그대로.</p></div>
+        <div class="fx a" style="--i:5"><div class="k">해 본 것</div><p><span class="mk">허용을 눌렀고, 새로 열어 봤어.</span> <br>이미 해 본 것은 빼고 찾게 합니다.</p></div>
+      </div>
+      <div class="take rv" data-from="1" style="margin-top:1.6rem">한 번에 하나씩 고치게 하고, <em>고친 뒤에는 다시 열어서</em> 확인합니다.</div>
+    </div>
+  </section>
+
+  <!-- 14 쓰는 사람에 맞추기 -->
+  <section class="slide" data-title="쓰는 사람에 맞추기" data-steps="1">
+    <div class="eyebrow a" style="--i:0">FOR WHOM<span>다듬기</span></div>
+    <h2 class="a" style="--i:1">쓰는 사람의 사정이 <em>이유</em>가 됩니다</h2>
+    <div class="body">
+      <div class="quotes">
+        <div class="qt a" style="--i:2"><div class="who2">한 손</div><blockquote>앉아서 한 손만 써도 연주되게 해줘.</blockquote><div class="res"><b>이렇게 바뀝니다</b>두 손이 필요한 동작이 빠지고, 한 손으로 음 고르기와 연주를 모두 합니다.</div></div>
+        <div class="qt a" style="--i:3"><div class="who2">손이 안 잡힐 때</div><blockquote>손이 잘 안 잡히는 학생도 있어. 마우스나 키보드로도 같은 소리를 내게 해줘.</blockquote><div class="res"><b>이렇게 바뀝니다</b>화면의 건반과 키보드 키로도 연주됩니다.</div></div>
+        <div class="qt a" style="--i:4"><div class="who2">카메라가 부담될 때</div><blockquote>얼굴이 나오는 게 싫은 학생도 있어. 내 모습 대신 선만 보이게 고를 수 있게 해줘.</blockquote><div class="res"><b>이렇게 바뀝니다</b>카메라 영상을 숨기고 손의 선만 보이는 선택이 생깁니다.</div></div>
+      </div>
+      <p class="note2 rv" data-from="1">강의용으로 구성한 예시입니다. <b>이 이유는 학생을 아는 선생님만 압니다.</b></p>
+    </div>
+  </section>
+
+  <!-- 15 바꿔 만들기 -->
+  <section class="slide" data-title="구조는 같고 반응만 다릅니다" data-steps="1">
+    <div class="eyebrow a" style="--i:0">NEXT<span>바꿔 만들기</span></div>
+    <h2 class="a" style="--i:1">구조는 같고 <em>동작과 반응</em>만 다릅니다</h2>
+    <p class="lead a" style="--i:2">카메라로 손을 읽고, 화면이 반응하는 구조는 같습니다.</p>
+    <div class="body">
+      <div class="grid4 g3 a" style="--i:3">
+        <div class="card4"><div class="n">MADE 1</div><h3>Motion Lab</h3><p>손 모양으로 연주하는 사이트입니다. 오늘 만들 것입니다.</p><div class="ex"><b>동작과 반응</b>손 펴기: 음 고르기<br>주먹 쥐기: 소리 내기</div></div>
+        <div class="card4"><div class="n">MADE 2</div><h3>공룡 게임</h3><p>손을 올리고 내리는 동작으로 공룡을 움직이는 게임입니다.</p><div class="ex"><b>동작과 반응</b>한 손: 점프<br>두 손: 숙이기</div></div>
+        <div class="card4"><div class="n">YOUR TURN</div><h3>내 수업이라면</h3><p>어떤 동작에 어떤 반응을 붙일 수 있을까요?</p><div class="ex"><b>동작과 반응</b>동작: ______<br>반응: ______</div></div>
+      </div>
+      <p class="note2 rv" data-from="1">구조는 그대로 두고, <b>요청에서 동작과 반응만 바꿉니다.</b></p>
+    </div>
+  </section>
+
+  <!-- 17 정리 -->
+  <section class="slide" data-title="정리" data-steps="0">
+    <div class="eyebrow a" style="--i:0">SUMMARY<span>정리</span></div>
+    <h2 class="a" style="--i:1">오늘 한 일을 <em>한 줄씩</em> 돌아봅니다</h2>
+    <div class="body">
+      <div class="map7 a" style="--i:2">
+        <div class="m7"><span class="tn">01</span><b>완성 기준을 적었다</b><span>눈과 귀로 확인할 네 줄</span></div>
+        <div class="m7"><span class="tn">02</span><b>도구 이름을 알려 주었다</b><span>MediaPipe, 브라우저 소리</span></div>
+        <div class="m7"><span class="tn">03</span><b>디자인은 AI에게 맡겼다</b><span>색, 글꼴, 배치는 요청 한 줄로</span></div>
+        <div class="m7"><span class="tn">04</span><b>한 단계씩 만들었다</b><span>카메라, 손, 소리, 음 순서로</span></div>
+        <div class="m7"><span class="tn">05</span><b>단계마다 열어 확인했다</b><span>허용 창, 스켈레톤, 소리</span></div>
+        <div class="m7"><span class="tn">06</span><b>안 될 때 본 것을 말했다</b><span>증상, 환경, 화면 문구, 해 본 것</span></div>
+        <div class="m7"><span class="tn">07</span><b>쓰는 사람에 맞췄다</b><span>한 손, 키보드, 선만 보이기</span></div>
+        <div class="m7"><span class="tn">08</span><b>같은 구조로 게임도 만든다</b><span>공룡 게임: 한 손 점프, 두 손 숙이기</span></div>
+      </div>
+      <div class="band a" style="--i:3">코드는 <em>AI</em>가, 확인은 내가. 됐는지 판단하는 일은 선생님이 합니다.</div>
+    </div>
+  </section>
+
+  <!-- 18 마무리 -->
+  <section class="slide endv" data-title="마무리" data-steps="0">
+    <div class="eyebrow a" style="--i:0;color:var(--mark)">THANK YOU<span>질문을 받겠습니다</span></div>
+    <h1 class="a" style="--i:1">코드는 AI가,<br><em>확인은 내가</em>.</h1>
+    <p class="a" style="--i:2">됐는지 판단하는 일은 선생님이 합니다.</p>
+    <div class="acts a" style="--i:3"><button class="pri" type="button" data-go="15">정리 다시 보기</button><button type="button" data-src="">자료 출처</button><button type="button" data-go="0">처음으로</button></div>
+  </section>
+
+  <div class="bar" id="bar"></div>
+  <footer class="bot">
+    <span class="pg"><b id="pgN">01</b> / <span id="pgT">17</span></span><span class="ttl" id="pgTitle">코드는 AI가, 확인은 내가</span>
+    <span class="hint">← → 키로 이동, E 키로 편집</span>
+    <span class="arw"><button type="button" id="prevBtn" aria-label="이전">←</button><button type="button" id="nextBtn" aria-label="다음">→</button></span>
+  </footer>
+  <div class="sr" id="sr" aria-live="polite">1번째, 코드는 AI가, 확인은 내가</div>
+</main>
+
+<div id="editbar" hidden=""><b>✏️ 편집 모드</b><span>점선 글자를 눌러 고치세요</span><button type="button" class="pri" id="edSave">파일로 저장</button><button type="button" id="edReset">처음 상태로</button><button type="button" id="edDone">끝내기 (E)</button></div>
+
+<div class="mo" id="mo" hidden=""><div class="mcard" id="mcard" role="dialog" aria-modal="true" aria-label="자세히 보기" tabindex="-1"><button class="mclose" id="mclose" type="button" aria-label="닫기">×</button><div id="mbody"></div></div></div>
+
+<template id="tpl-src">
+  <div class="m-k">SOURCES</div><h3>자료 출처와 만든 과정</h3>
+  <ul class="reflist">
+    <li><b>손 인식</b> <a href="https://ai.google.dev/edge/mediapipe/solutions/gesture_recognizer" target="_blank" rel="noopener">MediaPipe Gesture Recognizer</a><small>손 관절을 찾고 펼친 손과 주먹을 구분하는 기능을 씁니다.</small></li>
+    <li><b>소리</b> <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener">Web Audio API</a><small>브라우저가 소리를 직접 만드는 기능입니다.</small></li>
+    <li><b>3번 장의 모션 화면</b><small>MediaPipe 손 관절 21개의 구조를 본떠 강의용으로 그린 애니메이션입니다. 실제 카메라 화면이 아닙니다.</small></li>
+    <li><b>글꼴</b> 나눔스퀘어라운드 (대체 글꼴 Jua, Gowun Dodum)<small>모두 SIL Open Font License 1.1. 무료 글꼴은 <a href="https://noonnu.cc/" target="_blank" rel="noopener">눈누</a>에서 라이선스 허용 범위를 확인하세요.</small></li>
+    <li><b>슬라이드 틀</b> 1부, 2부와 같은 양식입니다. 색만 초록 계열로 바꿨습니다.</li>
+    <li><b>예시 요청과 고치기 예시</b><small>강의용으로 만든 예시입니다. 실제 대화를 옮긴 것이 아닙니다. 각자 자료에 맞게 바꿔 쓰세요.</small></li>
+  </ul>
+</template>
+
+<script>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var stage = $('#stage'), slides = $$('.slide'), N = slides.length, cur = 0, sr = $('#sr');
+
+  var nums = $('#nums'); nums.innerHTML = '';
+  slides.forEach(function (s, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = (i < 9 ? '0' : '') + (i + 1);
+    b.setAttribute('aria-label', (i + 1) + '번 ' + s.getAttribute('data-title')); b.setAttribute('data-go', i); nums.appendChild(b);
+  });
+  $('#pgT').textContent = (N < 10 ? '0' : '') + N;
+
+  function stepsOf(sl) { return parseInt(sl.getAttribute('data-steps') || '0', 10); }
+  function getStep(sl) { return parseInt(sl.getAttribute('data-step') || '0', 10); }
+  function applyStep(sl) {
+    var n = getStep(sl);
+    $$('[data-from]', sl).forEach(function (e) { e.classList.toggle('in', n >= parseInt(e.getAttribute('data-from'), 10)); });
+    $$('[data-upto]', sl).forEach(function (e) { e.classList.toggle('in', n <= parseInt(e.getAttribute('data-upto'), 10)); });
+    $$('[data-only]', sl).forEach(function (e) { e.classList.toggle('in', n === parseInt(e.getAttribute('data-only'), 10)); });
+  }
+  function setStep(sl, n) { sl.setAttribute('data-step', n); applyStep(sl); }
+  function editing() { return !!(window.__isEditing && window.__isEditing()); }
+
+  function go(i, dir) {
+    i = Math.max(0, Math.min(N - 1, i));
+    slides.forEach(function (s, k) { s.classList.toggle('on', k === i); s.classList.toggle('left', k < i); });
+    cur = i;
+    var sl = slides[i];
+    setStep(sl, (dir === 'back' || editing()) ? stepsOf(sl) : 0);
+    stage.classList.toggle('dark', sl.classList.contains('endv'));
+    $$('#nums button').forEach(function (b, k) { b.classList.toggle('cur', k === i); });
+    $('#pgN').textContent = (i < 9 ? '0' : '') + (i + 1);
+    $('#pgTitle').textContent = sl.getAttribute('data-title');
+    $('#bar').style.width = ((i + 1) / N * 100) + '%';
+    if (history.replaceState) history.replaceState(null, '', '#' + (i + 1));
+    sr.textContent = (i + 1) + '번째, ' + sl.getAttribute('data-title');
+  }
+  function next() { var sl = slides[cur]; if (getStep(sl) < stepsOf(sl)) setStep(sl, getStep(sl) + 1); else if (cur < N - 1) go(cur + 1, 'fwd'); }
+  function prev() { var sl = slides[cur]; if (getStep(sl) > 0) setStep(sl, getStep(sl) - 1); else if (cur > 0) go(cur - 1, 'back'); }
+
+  /* 복사와 파일로 받기 */
+  var toastT = null;
+  function note(t) { var x = $('.ed-toast'); if (!x) return; x.textContent = t; x.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { x.classList.remove('show'); }, 2200); }
+  function copyText(text) {
+    function fb() { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); note(ok ? '복사했습니다' : '복사하지 못했습니다. 직접 선택해서 복사하세요'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { note('복사했습니다'); }, fb); else fb();
+  }
+  function textOf(el) { return (el.innerText || el.textContent || '').replace(/\u00a0/g, ' ').trim(); }
+  function downloadText(text, name) {
+    var blob = new Blob([text], { type: 'text/markdown;charset=utf-8' }); var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); note('파일로 받았습니다');
+  }
+
+  /* 창 */
+  var mo = $('#mo'), mbody = $('#mbody'), mcard = $('#mcard'), lastFocus = null;
+  function openCase(id, opener) {
+    var tpl = document.getElementById('tpl-' + id); if (!tpl) return;
+    lastFocus = opener || document.activeElement;
+    mbody.innerHTML = ''; mbody.appendChild(tpl.content.cloneNode(true));
+    window.__onCaseOpen && window.__onCaseOpen(mbody, id);
+    mo.hidden = false; mcard.scrollTop = 0; $('#mclose').focus();
+  }
+  function closeMo() { window.__onCaseClose && window.__onCaseClose(); mo.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+  $('#mclose').addEventListener('click', closeMo);
+  mo.addEventListener('click', function (e) { if (e.target === mo) closeMo(); });
+  function openOverview(opener) {
+    lastFocus = opener;
+    var html = '<div class="m-k">OVERVIEW</div><h3>전체 슬라이드</h3><div class="ovgrid">';
+    slides.forEach(function (s, i) { html += '<button type="button" data-go="' + i + '"' + (i === cur ? ' class="cur"' : '') + '><i>' + (i < 9 ? '0' : '') + (i + 1) + '</i>' + s.getAttribute('data-title') + '</button>'; });
+    mbody.innerHTML = html + '</div>';
+    window.__onCaseOpen && window.__onCaseOpen(mbody, null);
+    mo.hidden = false; $('#mclose').focus();
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target; if (!t.closest) return;
+    var g = t.closest('[data-go]');
+    if (g) { e.preventDefault(); if (!mo.hidden) { window.__onCaseClose && window.__onCaseClose(); mo.hidden = true; } go(parseInt(g.getAttribute('data-go'), 10), 'fwd'); return; }
+    var c = t.closest('[data-copy]'); if (c) { var el = document.getElementById(c.getAttribute('data-copy')); if (el) copyText(textOf(el)); return; }
+    var ca = t.closest('[data-copyask]'); if (ca) { var box = document.getElementById(ca.getAttribute('data-copyask')); if (box) copyText($$('.tx', box).map(textOf).join('\n')); return; }
+    var d = t.closest('[data-dl]'); if (d) { var el2 = document.getElementById(d.getAttribute('data-dl')); if (el2) downloadText(textOf(el2) + '\n', d.getAttribute('data-name') || '자료.md'); return; }
+    if (t.closest('[data-src]')) { openCase('src', t.closest('[data-src]')); return; }
+  });
+  $('#srcBtn').addEventListener('click', function (e) { openCase('src', e.currentTarget); });
+  $('#ovBtn').addEventListener('click', function (e) { openOverview(e.currentTarget); });
+  $('#prevBtn').addEventListener('click', prev); $('#nextBtn').addEventListener('click', next);
+  $('#fsBtn').addEventListener('click', function () { if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); } else { document.exitFullscreen && document.exitFullscreen(); } });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!mo.hidden) { if (e.key === 'Escape') closeMo(); return; }
+    var tg = e.target;
+    if (tg && (tg.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(tg.tagName))) return;
+    if (tg && tg.closest && tg.closest('button') && (e.key === 'Enter' || e.key === ' ')) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); next(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); prev(); }
+    else if (k === 'Home') go(0, 'fwd'); else if (k === 'End') go(N - 1, 'fwd');
+    else if (k === 'f' || k === 'F') $('#fsBtn').click();
+  });
+  var tx = null;
+  stage.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) { if (tx === null || editing()) { tx = null; return; } var dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); } tx = null; });
+
+  window.__deck = { slides: slides, go: go, cur: function () { return cur; }, setStep: function (sl, n) { setStep(sl, n); }, stepsOf: stepsOf };
+  var start = parseInt((location.hash || '').replace('#', ''), 10);
+  go(isNaN(start) ? 0 : start - 1, 'fwd');
+})();
+
+</script>
+<script>
+/* ---------- 편집 모드 ---------- */
+(function () {
+  var D = window.__deck; if (!D) return;
+  var KEY = 'deck-edit:' + location.pathname;
+  var SEL = '.slide h1, .slide h2, .slide h3, .slide h4, .slide p, .slide li, .slide td, .slide .ed, .slide .cv-meta, .slide .take, .slide .band, .slide .eyebrow, .slide .case-t, .slide .chip, .slide .slogan, .slide .tile b, .slide .tile small';
+  var MSEL = '#mbody h3, #mbody p, #mbody .bubble, #mbody li, #mbody td, #mbody .s2 span, #mbody .part span, #mbody .m-rk, #mbody .pc2, #mbody .fin';
+  function arr(x) { return Array.prototype.slice.call(x); }
+  /* 편집하며 생긴 찌꺼기 정리: 문단 안의 상자는 줄바꿈으로, 브라우저가 붙인 글자 크기와 색은 제거 */
+  function unwrap(x) { while (x.firstChild) x.parentNode.insertBefore(x.firstChild, x); x.remove(); }
+  function clean(root) {
+    if (!root || !root.querySelectorAll) return root;
+    if (/^(P|SPAN|H[1-6]|LI|TD|TH|BLOCKQUOTE|B|SMALL)$/.test(root.tagName)) {
+      arr(root.querySelectorAll('div, p')).forEach(function (b) {
+        var frag = document.createDocumentFragment(), prev = b.previousSibling;
+        if (prev && prev.nodeName !== 'BR') frag.appendChild(document.createElement('br'));
+        while (b.firstChild) frag.appendChild(b.firstChild);
+        b.parentNode.replaceChild(frag, b);
+      });
+    }
+    arr(root.querySelectorAll('[style]')).forEach(function (x) {
+      var keep = [];
+      for (var i = 0; i < x.style.length; i++) { var pn = x.style[i]; if (pn.indexOf('--') === 0) keep.push(pn + ':' + x.style.getPropertyValue(pn).trim()); }
+      if (keep.length) x.setAttribute('style', keep.join(';'));
+      else { x.removeAttribute('style'); if (x.tagName === 'SPAN' && !x.attributes.length) unwrap(x); }
+    });
+    arr(root.querySelectorAll('font')).forEach(unwrap);
+    return root;
+  }
+  function cleanHTML(el) { return clean(el.cloneNode(true)).innerHTML; }
+  function topLevel(list, sel) {
+    return list.filter(function (el) { return !(el.parentElement && el.parentElement.closest(sel)) && !el.closest('#pbText, #pbLegend, [data-noedit]'); });
+  }
+  var els = topLevel(arr(document.querySelectorAll(SEL)), SEL);
+  els.forEach(function (el, i) { el.setAttribute('data-eid', i); });
+  var tpls = arr(document.querySelectorAll('template[id]'));
+  var orig = els.map(function (e) { return e.innerHTML; });
+  var torig = tpls.map(function (t) { return t.innerHTML; });
+  var sig = els.length + ':' + tpls.length;
+  var editing = false, timer = null, curTpl = null;
+
+  var toast = document.createElement('div'); toast.className = 'ed-toast'; toast.setAttribute('aria-live', 'polite'); document.body.appendChild(toast);
+  var tt = null;
+  function say(t) { toast.textContent = t; toast.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { toast.classList.remove('show'); }, 2400); }
+
+  /* 이 브라우저에 남아 있던 편집 내용 불러오기 */
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var data = JSON.parse(raw);
+      if (data && data.sig === sig) {
+        var n = 0;
+        Object.keys(data.els || {}).forEach(function (k) { var el = els[+k]; if (el) { el.innerHTML = data.els[k]; clean(el); n++; } });
+        Object.keys(data.tpls || {}).forEach(function (id) { var t = document.getElementById(id); if (t) { t.innerHTML = data.tpls[id]; n++; } });
+        if (n) setTimeout(function () { say('이 브라우저에 남아 있던 편집 내용을 불러왔습니다'); }, 700);
+      }
+    }
+  } catch (e) {}
+
+  function save() {
+    try {
+      var o = { sig: sig, els: {}, tpls: {} };
+      els.forEach(function (el, i) { var h = cleanHTML(el); if (h !== orig[i]) o.els[i] = h; });
+      tpls.forEach(function (t, i) { if (t.innerHTML !== torig[i]) o.tpls[t.id] = t.innerHTML; });
+      localStorage.setItem(KEY, JSON.stringify(o));
+    } catch (e) {}
+  }
+  function queue() { clearTimeout(timer); timer = setTimeout(save, 500); }
+
+  var bar = document.getElementById('editbar'), btn = document.getElementById('edBtn');
+  function setEditable(list, on) {
+    list.forEach(function (el) {
+      if (on) { el.setAttribute('contenteditable', 'true'); el.setAttribute('spellcheck', 'false'); }
+      else { el.removeAttribute('contenteditable'); el.removeAttribute('spellcheck'); }
+    });
+  }
+  function modalEls() { return topLevel(arr(document.querySelectorAll(MSEL)), MSEL); }
+  function toggle(on) {
+    editing = (on === undefined) ? !editing : on;
+    document.body.classList.toggle('editing', editing);
+    setEditable(els, editing);
+    if (curTpl) setEditable(modalEls(), editing);
+    if (bar) bar.hidden = !editing;
+    if (btn) btn.setAttribute('aria-pressed', editing ? 'true' : 'false');
+    var sl = D.slides[D.cur()];
+    if (editing) D.setStep(sl, D.stepsOf(sl), false);
+    else { if (document.activeElement && document.activeElement.isContentEditable) document.activeElement.blur(); els.forEach(function (el) { clean(el); }); save(); }
+    say(editing ? '편집 모드: 글자를 눌러 바로 고치세요' : '편집 모드를 껐습니다');
+  }
+  window.__isEditing = function () { return editing; };
+  window.__deckEdit = { toggle: toggle };
+
+  /* 사례 창 안의 글자도 고치고, 닫을 때 원본에 반영 */
+  window.__onCaseOpen = function (mbody, id) {
+    curTpl = id || null;
+    if (editing && curTpl) setEditable(modalEls(), true);
+  };
+  window.__onCaseClose = function () {
+    if (!curTpl) return;
+    var mbody = document.getElementById('mbody'), t = document.getElementById('tpl-' + curTpl);
+    curTpl = null;
+    if (!mbody || !t) return;
+    var c = mbody.cloneNode(true);
+    arr(c.querySelectorAll('[contenteditable]')).forEach(function (x) { clean(x); x.removeAttribute('contenteditable'); x.removeAttribute('spellcheck'); });
+    if (t.innerHTML !== c.innerHTML) { t.innerHTML = c.innerHTML; queue(); }
+  };
+
+  document.addEventListener('input', function (e) { if (editing && e.target.isContentEditable) queue(); });
+  /* Enter는 문단 상자 대신 줄바꿈만 넣기 */
+  document.addEventListener('beforeinput', function (e) {
+    if (!editing || !e.target || !e.target.isContentEditable) return;
+    if (e.inputType === 'insertParagraph') { e.preventDefault(); document.execCommand('insertLineBreak'); }
+  }, true);
+  document.addEventListener('paste', function (e) {
+    if (!editing || !e.target.isContentEditable) return;
+    e.preventDefault();
+    var t = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, t);
+  });
+  /* 고치는 중에는 방향키, 스페이스, Enter로 장이 넘어가지 않게 */
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var tg = e.target;
+    if (tg && tg.isContentEditable) {
+      if (e.key === 'Escape') { tg.blur(); e.preventDefault(); }
+      e.stopPropagation();
+      return;
+    }
+    if (tg && /INPUT|TEXTAREA|SELECT/.test(tg.tagName)) return;
+    var modalOpen = arr(document.querySelectorAll('.mo')).some(function (m) { return !m.hidden; });
+    if ((e.key === 'e' || e.key === 'E') && !modalOpen) { e.preventDefault(); e.stopPropagation(); toggle(); }
+  }, true);
+  /* 편집 중에는 장 안의 이동 버튼이 눌려도 이동하지 않게 */
+  document.addEventListener('click', function (e) {
+    if (!editing) return;
+    var t = e.target;
+    if (t.closest && t.closest('.slide') && t.closest('[data-go], [data-set]')) { e.stopPropagation(); }
+  }, true);
+
+  function download() {
+    save();
+    var doc = document.documentElement.cloneNode(true);
+    arr(doc.querySelectorAll('[data-eid]')).forEach(function (x) { clean(x); });
+    arr(doc.querySelectorAll('[contenteditable]')).forEach(function (x) { x.removeAttribute('contenteditable'); x.removeAttribute('spellcheck'); });
+    var b = doc.querySelector('body'); if (b) b.classList.remove('editing');
+    var eb = doc.querySelector('#editbar'); if (eb) eb.setAttribute('hidden', '');
+    var nm = doc.querySelector('#nums'); if (nm) nm.innerHTML = '';
+    arr(doc.querySelectorAll('.slide')).forEach(function (s) { s.classList.remove('on', 'left'); s.removeAttribute('data-step'); });
+    arr(doc.querySelectorAll('.in')).forEach(function (x) { x.classList.remove('in'); });
+    arr(doc.querySelectorAll('.lit')).forEach(function (x) { x.classList.remove('lit'); });
+    arr(doc.querySelectorAll('.pcard')).forEach(function (x) { x.classList.remove('after'); });
+    arr(doc.querySelectorAll('.mo')).forEach(function (m) { m.setAttribute('hidden', ''); });
+    ['#mbody', '#pbText', '#pbLegend'].forEach(function (s) { var m = doc.querySelector(s); if (m) m.innerHTML = ''; });
+    arr(doc.querySelectorAll('.ed-toast')).forEach(function (x) { x.remove(); });
+    var br = doc.querySelector('#bar'); if (br) br.removeAttribute('style');
+    var stg = doc.querySelector('#stage'); if (stg) stg.classList.remove('dark');
+    var html = '<!DOCTYPE html>\n' + doc.outerHTML;
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var a = document.createElement('a');
+    var base = document.documentElement.getAttribute('data-file') || 'material';
+    a.href = URL.createObjectURL(blob); a.download = base + '_edit.html';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    say('고친 내용을 담아 파일로 저장했습니다');
+  }
+  function reset() {
+    if (!window.confirm('이 브라우저에 남은 편집 내용을 지우고 처음 상태로 되돌릴까요?')) return;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    location.reload();
+  }
+  if (btn) btn.addEventListener('click', function () { toggle(); });
+  var s1 = document.getElementById('edSave'), s2 = document.getElementById('edReset'), s3 = document.getElementById('edDone');
+  if (s1) s1.addEventListener('click', download);
+  if (s2) s2.addEventListener('click', reset);
+  if (s3) s3.addEventListener('click', function () { toggle(false); });
+  document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('[data-edit-on]'); if (t) toggle(true); });
+})();
+
+</script>
+
+
+<script>
+/* ---------- 3번 장: 손 스켈레톤 애니메이션 (강의용 그림) ---------- */
+(function () {
+  var hand = document.getElementById('amHand'); if (!hand) return;
+  var stage = document.getElementById('amStage'), chip = document.getElementById('amChip'), rip = document.getElementById('amRip');
+  var slide = stage.closest('.slide');
+  var lines = [].slice.call(hand.querySelectorAll('.bn')), dots = [].slice.call(hand.querySelectorAll('.jt'));
+  var lanes = [].slice.call(stage.querySelectorAll('.ln'));
+  var NAMES = ['도', '레', '미', '파', '솔', '라', '시', '도'];
+  var C = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+  var OPEN = [[100,215],[68,195],[46,168],[32,142],[22,118],[72,140],[66,100],[62,72],[59,48],[95,132],[94,88],[93,58],[92,30],[118,138],[122,98],[124,72],[126,48],[140,150],[150,118],[156,98],[162,80]];
+  var FIST = [[100,215],[72,198],[58,176],[66,158],[84,152],[74,146],[70,112],[82,118],[90,138],[96,140],[96,104],[104,112],[106,134],[118,144],[121,110],[124,118],[122,138],[138,156],[144,128],[142,134],[136,148]];
+  var SEQ = [1, 3, 5, 7, 4, 2], T_MOVE = 650, T_OPEN = 350, T_CLOSE = 200, T_FIST = 420, T_REOPEN = 260, T_ALL = T_MOVE + T_OPEN + T_CLOSE + T_FIST + T_REOPEN;
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function laneX(i) { return 24 + 74 * i + 33; }
+  function ease(t) { return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function draw(cx, p, wob) {
+    var ox = cx - 100 + wob, oy = 130, pts = [];
+    for (var i = 0; i < 21; i++) pts.push([ox + OPEN[i][0] + (FIST[i][0] - OPEN[i][0]) * p, oy + OPEN[i][1] + (FIST[i][1] - OPEN[i][1]) * p]);
+    lines.forEach(function (l, k) { var a = pts[C[k][0]], b = pts[C[k][1]]; l.setAttribute('x1', a[0].toFixed(1)); l.setAttribute('y1', a[1].toFixed(1)); l.setAttribute('x2', b[0].toFixed(1)); l.setAttribute('y2', b[1].toFixed(1)); });
+    dots.forEach(function (d, k) { d.setAttribute('cx', pts[k][0].toFixed(1)); d.setAttribute('cy', pts[k][1].toFixed(1)); });
+    return pts;
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (!slide.classList.contains('on')) return;
+    var total = SEQ.length * T_ALL, t = now % total, n = Math.floor(t / T_ALL), lt = t - n * T_ALL;
+    var prev = n === 0 ? 3 : SEQ[n - 1], cur = SEQ[n], x, p = 0, hit = false, since = 0;
+    if (lt < T_MOVE) { x = laneX(prev) + (laneX(cur) - laneX(prev)) * ease(lt / T_MOVE); }
+    else {
+      x = laneX(cur); var u = lt - T_MOVE;
+      if (u < T_OPEN) p = 0;
+      else if (u < T_OPEN + T_CLOSE) p = ease((u - T_OPEN) / T_CLOSE);
+      else if (u < T_OPEN + T_CLOSE + T_FIST) { p = 1; hit = true; since = u - T_OPEN - T_CLOSE; }
+      else p = 1 - ease((u - T_OPEN - T_CLOSE - T_FIST) / T_REOPEN);
+    }
+    var wob = Math.sin(now / 260) * 2.2;
+    var pts = draw(x, p, wob);
+    hand.classList.toggle('fist', p > .6);
+    var near = Math.max(0, Math.min(7, Math.round((x - 57) / 74)));
+    lanes.forEach(function (l, k) { l.classList.toggle('cur', k === near); l.classList.toggle('hit', hit && k === near && since < 220); });
+    chip.textContent = p > .6 ? '✊ 연주 ' + NAMES[near] : '✋ 준비';
+    chip.classList.toggle('on', p > .6);
+    if (hit && since < 520) { var q = since / 520; rip.setAttribute('cx', pts[9][0].toFixed(1)); rip.setAttribute('cy', pts[9][1].toFixed(1)); rip.setAttribute('r', (20 + 90 * q).toFixed(1)); rip.setAttribute('opacity', (0.8 * (1 - q)).toFixed(2)); }
+    else rip.setAttribute('opacity', '0');
+  }
+  if (reduced) { draw(laneX(3), 0, 0); lanes[3].classList.add('cur'); }
+  else requestAnimationFrame(frame);
+})();
+
+</script>
+</body></html>
